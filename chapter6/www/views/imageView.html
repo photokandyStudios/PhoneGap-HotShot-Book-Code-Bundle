@@ -1,0 +1,125 @@
+<div class="viewBackground">
+  <div class="navigationBar">
+    <div style="padding-top:7px" id="imageView_title"></div>
+    <button class="backButton barButton" id="imageView_backButton" style="left:10px" ></button>
+  </div>
+  <div class="content avoidNavigationBar avoidToolBar" style="background-image: none; background-color: #333; padding:0; overflow: scroll;" id="imageView_scroller">
+    <div id="imageView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+  </div>
+  <div class="toolBar">
+    <span class="icon" id="imageView_deleteButton"><img src="./images/trash_64.png" width=32 height=32 /></span>
+    <span class="icon" id="imageView_shareButton"><img src="./images/man_64.png" width=32 height=32 /></span>
+  </div>
+</div>
+
+<div id="imageView_documentTemplate" class="hidden">
+ <img src="%SRC%" width=100% />
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var imageView = $ge("imageView") || {};
+  imageView.imagePath = "";
+  imageView.imageIndex = -1;
+  
+  imageView.setImage = function ( imagePath, imageIndex )
+  {
+    imageView.imagePath = imagePath;
+    imageView.imageIndex = imageIndex;
+    
+    $ge("imageView_contentArea").innerHTML =
+      PKUTIL.instanceOfTemplate($ge("imageView_documentTemplate"),
+        { "src" : imageView.imagePath        });
+  }
+  
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  imageView.initializeView = function()
+  {
+    imageView.viewTitle = $ge("imageView_title");
+    imageView.viewTitle.innerHTML = __T("APP_TITLE_IMG");
+
+    imageView.backButton = $ge("imageView_backButton");
+    imageView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(imageView.backButton, "touchend",
+      function(e)
+      {
+        PKUI.CORE.popView();
+      }
+    );
+    
+    imageView.deleteButton = $ge("imageView_deleteButton");
+    PKUI.CORE.addTouchListener(imageView.deleteButton, "touchend",
+      function(e)
+      {
+        imageView.confirmDeletePictures();
+      }
+    );
+    
+    imageView.shareButton = $ge("imageView_shareButton");
+    //CHALLENGE: Implement sharing.
+
+    if (device.platform != "WinCE")
+    {
+      imageView.myScroll = new SCROLLER.GenericScroller('imageView_contentArea');
+    }
+  }
+  
+  imageView.confirmDeletePictures = function ()
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Delete Image"), __T("This will delete the selected image. This action is unrecoverable."), __T("Don't Delete<|Delete*"), function(i)
+    {
+      if (i == 1)
+      {
+        PKUTIL.delay ( 100, imageView.deleteSelectedPicture );
+      }
+    });
+    anAlert.show();
+  }
+  
+  imageView.deleteSelectedPicture = function ()
+  {
+    PKFILE.removeFile ( imageView.imagePath,
+                        function ()
+                        {
+                          console.log ("3");
+                          PKUTIL.delay(100, function() { PKUI.CORE.popView(); } );// our image is gone, pop us...
+                          console.log ("2");
+                          documentsView.reloadAvailableDocuments();
+                          
+                        },
+                        function (e)
+                        {
+                          var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"), __T("Failed to remove file."));
+                          anAlert.show();
+                          documentsView.reloadAvailableDocuments();
+                        }
+                      );
+  }
+
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  imageView.viewWillAppear = function ()
+  {
+  }
+  imageView.viewWillHide = function ()
+  {
+  }
+  imageView.viewDidHide = function ()
+  {
+    $ge("imageView_contentArea").innerHTML = "";
+  }
+  imageView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+  
+</script>

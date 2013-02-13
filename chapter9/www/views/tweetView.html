@@ -1,0 +1,176 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Tweet" view for Socializer                         # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="content " style="padding:0; overflow:scroll; -webkit-overflow-scrolling: touch;" id="tweetView_scroller">
+   <div id="tweetView_contentArea" style="padding: 0; height: auto; position: relative;">
+   </div>
+ </div>
+</div>
+
+<div class="hidden" id="tweetView_tweetTemplate">
+ <div class="twitterItem" onclick="tweetView.selectTweet(%INDEX%);">
+  <img src="%PROFILE_IMAGE_URL%" width=64 height=64 border=0 />
+  <div class="twitterRealName">%REAL_NAME%</div>
+  <div class="twitterScreenName">@%SCREEN_NAME%</div>
+  <div class="twitterTweet">%TWEET%</div>
+  <div class="twitterEntities">%ENTITIES%</div>
+ </div>
+</div>
+
+<div class="hidden" id="tweetView_entityTemplate">
+  <DIV class="entity %TYPE%">%ENTITY%</DIV>
+</div>
+
+<div class="hidden" id="tweetView_urlEntityTemplate">
+ <a href="javascript:PKUTIL.showURL('%URL%');" class="openInNewWindow url" target="_blank">%DISPLAYURL%</a>
+</div>
+
+<div class="hidden" id="tweetView_hashEntityTemplate">
+ <a href="javascript:socialView.loadStreamFor('%23%HASHTAG%'); PKUI.CORE.popView();" class="hash">#%TEXT%</a>
+</div>
+
+<div class="hidden" id="tweetView_userEntityTemplate">
+ <a href="javascript:socialView.loadStreamFor('@%USER%'); PKUI.CORE.popView();" class="user" >@%TEXT%</a>
+</div>
+
+
+<script>
+var tweetView = $ge("tweetView") || {};
+
+tweetView.theTweet = {};
+
+tweetView.setTweet = function(aTweet) {
+  tweetView.theTweet = aTweet;
+}
+
+/**
+ *
+ * Initializes the view.
+ *
+ */
+tweetView.initializeView = function() {
+}
+
+
+tweetView.loadTweet = function() {
+  var theTweet = tweetView.theTweet;
+
+  var theTweetTemplate = $ge("tweetView_tweetTemplate").innerHTML;
+  var theEntityTemplate = $ge("tweetView_entityTemplate").innerHTML;
+  var theURLEntityTemplate = $ge("tweetView_urlEntityTemplate").innerHTML;
+  var theHashEntityTemplate = $ge("tweetView_hashEntityTemplate").innerHTML;
+  var theUserEntityTemplate = $ge("tweetView_userEntityTemplate").innerHTML;
+
+  var theContentArea = $ge("tweetView_contentArea");
+  var theTweetHTML = "";
+  var theEntitiesHTML = "";
+
+  // handle URL entities first
+  var theURLEntities = theTweet.entities.urls;
+  for (var i = 0; i < theURLEntities.length; i++) {
+    var theURLEntity = theURLEntities[i];
+
+    theEntitiesHTML += theEntityTemplate.replace("%TYPE%", "url").replace("%ENTITY%", theURLEntityTemplate.replace("%URL%", theURLEntity.url).replace("%DISPLAYURL%", theURLEntity.display_url));
+  }
+
+  // next, hash tags entities
+  var theHashEntities = theTweet.entities.hashtags;
+  for (var i = 0; i < theHashEntities.length; i++) {
+    var theHashEntity = theHashEntities[i];
+    theEntitiesHTML += theEntityTemplate.replace("%TYPE%", "hash").replace("%ENTITY%", theHashEntityTemplate.replace("%HASHTAG%", theHashEntity.text).replace("%TEXT%", theHashEntity.text));
+  }
+
+  // next, user tags entities
+  var theUserEntities = theTweet.entities.user_mentions;
+  for (var i = 0; i < theUserEntities.length; i++) {
+    var theUserEntity = theUserEntities[i];
+    theEntitiesHTML += theEntityTemplate.replace("%TYPE%", "user").replace("%ENTITY%", theUserEntityTemplate.replace("%USER%", theUserEntity.screen_name).replace("%TEXT%", theUserEntity.name));
+  }
+
+  var theTemplate = theTweetTemplate.replace("%PROFILE_IMAGE_URL%", theTweet.profile_image_url || theTweet.user.profile_image_url).replace("%REAL_NAME%", theTweet.from_user || theTweet.user.name).replace("%SCREEN_NAME%", theTweet.from_user || theTweet.user.screen_name).replace("%TWEET%", theTweet.text).replace("%ENTITIES%", theEntitiesHTML);
+
+  theTweetHTML += theTemplate;
+  plugins.navigationBar.setTitle(theTweet.text);
+  theContentArea.innerHTML = theTweetHTML;
+
+}
+
+/**
+ *
+ * Called by PKUI.CORE.pushView when we are about to appear.
+ *
+ */
+
+tweetView.viewDidAppear = function ()
+{
+  // set up our navigation bar
+  // it should have the user's stream name in the center,
+  // a "back" button on the left, and the "share" button on the right.
+  plugins.navigationBar.hideLeftButton();
+  plugins.navigationBar.hideRightButton();
+  plugins.navigationBar.setupLeftButton( __T("BACK"), null, tweetView.backButtonPressed);
+  plugins.navigationBar.showLeftButton();
+  plugins.navigationBar.setupRightButton( __T("SHARE"), null, tweetView.share );
+  plugins.navigationBar.showRightButton();
+}
+ 
+tweetView.viewWillAppear = function() {
+  // catch any back buttons
+  document.addEventListener("backbutton", tweetView.backButtonPressed, false);
+
+  tweetView.loadTweet(); // display our tweet
+}
+
+/**
+ *
+ * Called by PKUI.CORE when we are about to be hidden
+ *
+ */
+tweetView.viewWillHide = function() {
+  // clean up our navigation bar -- get rid of any displayed buttons
+  plugins.navigationBar.hideLeftButton();
+  plugins.navigationBar.hideRightButton();
+    plugins.navigationBar.setTitle("");
+  // and the back button
+      document.removeEventListener("backbutton", tweetView.backButtonPressed, false);
+}
+
+/**
+ *
+ * Handle Android's Back Button
+ *
+ */
+tweetView.backButtonPressed = function() {
+  PKUI.CORE.popView();
+}
+
+tweetView.share = function() {
+  var actionSheet = window.plugins.actionSheet;
+  actionSheet.create('Share', ['Twitter', 'Facebook', 'Email', 'Cancel'],
+  function(buttonValue, buttonIndex) {
+    if (buttonIndex==0)
+    {
+      PKUTIL.showURL("https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetView.theTweet.text) + "%20(via%20" + encodeURIComponent("@" + (tweetView.theTweet.from_user || tweetView.theTweet.user.screen_name)) + ")");
+    }
+    if (buttonIndex==1)
+    {
+      var messageBox = window.plugins.messageBox;
+      messageBox.alert('Not Implemented', 'Sorry, sharing with FaceBook is not yet implemented.',
+        function(button) {
+          console.log('button ' + button + ' pressed');
+        });
+    }
+    if (buttonIndex==2)
+    {
+      cordova.exec(null, null, "EmailComposer", "showEmailComposer",
+                  [{"body": tweetView.theTweet.text + " (via @" + (tweetView.theTweet.from_user || tweetView.theTweet.user.screen_name) + ")",
+                    "subject": "Thought this was interesting..." }]);
+    }
+  }, {cancelButtonIndex: 3});
+
+}
+</script>

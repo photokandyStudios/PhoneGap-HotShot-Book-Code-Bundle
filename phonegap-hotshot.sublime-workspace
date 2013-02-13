@@ -1,0 +1,472 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"node",
+				"node"
+			],
+			[
+				"book",
+				"book-abbrevation"
+			],
+			[
+				"ref",
+				"ref"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "createPhoneGapProject.shl",
+			"settings":
+			{
+				"buffer_size": 4813,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "chapter1/www/framework/utility.js",
+			"settings":
+			{
+				"buffer_size": 13178,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 49.0,
+		"selected_items":
+		[
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"pr",
+				"Package Control: List Packages"
+			],
+			[
+				"packa",
+				"Preferences: Browse Packages"
+			]
+		],
+		"width": 588.0
+	},
+	"console":
+	{
+		"height": 146.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter10/2/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter10/2/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter10/1/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter10/1/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter9/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter8/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter8/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter7/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter7/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter3/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter3/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter4/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter4/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter5/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter5/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter6/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter6/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter2/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter2/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter1/www/index.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/chapter1/www/index_android.html",
+		"/Users/kerrishotts/SkyDrive/phonegap-hotshot-bundle/createPhoneGapProject.shl",
+		"/Applications/phonegap/phonegap220/lib/android/bin/create",
+		"/Users/kerrishotts/Dropbox/pghs2/chapter1-6289/www/index_android.html",
+		"/Users/kerrishotts/Downloads/sealbum/SeeAlbum/www/index.html",
+		"/Users/kerrishotts/Downloads/sealbum/SeeAlbum/www/scripts/seeAlbumPgMain.js",
+		"/Volumes/ftp.photokandy.com/newwww/index.html",
+		"/Volumes/ftp.photokandy.com/apps/gib/index.html",
+		"/Volumes/ftp.photokandy.com/apps/gib/support/index.html",
+		"/Users/kerrishotts/Documents/XCode/gbible/gbible/about.html",
+		"/Volumes/ftp.photokandy.com/apps/gib/11/about.html",
+		"/Users/kerrishotts/SkyDrive/newwww/index.html",
+		"/Users/kerrishotts/SkyDrive/gib/osis-bibles/oeb.osis",
+		"/Users/kerrishotts/SkyDrive/gib/strongsgreek.xml",
+		"/Users/kerrishotts/SkyDrive/gib/osis-bibles/asv.osis",
+		"/Users/kerrishotts/SkyDrive/gib/sqlImport.py",
+		"/Users/kerrishotts/Downloads/momcircle-mobile-master/www/index.html",
+		"/Users/kerrishotts/Downloads/momcircle-mobile-master/www/js/app.js",
+		"/Users/kerrishotts/Downloads/momcircle-mobile-master/www/js/index.js",
+		"/Users/kerrishotts/Downloads/Localizable.strings",
+		"/Users/kerrishotts/Library/Application Support/Sublime Text 2/Packages/SideBarEnhancements/messages/11.13.2012.1305.0.txt",
+		"/Users/kerrishotts/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Users/kerrishotts/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/Localizable-pl.strings",
+		"/Users/kerrishotts/Library/Application Support/Sublime Text 2/Packages/User/SublimeLinter.sublime-settings",
+		"/Users/kerrishotts/Downloads/b_greeknt_1894_utf8/whnu.nt/whnu.nt"
+	],
+	"find":
+	{
+		"height": 38.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"box-",
+			"Matt.1.1",
+			"<Fo>",
+			"<WTH",
+			"<FI><RF>",
+			"<CM>",
+			"<Fi>",
+			"<Rf>",
+			"sys.argv",
+			"<strongs>3089",
+			"@\""
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"</FO>",
+			"<FO/>",
+			"<RF>",
+			"<CM/>",
+			"</FI>",
+			"</RF>",
+			"\""
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "createPhoneGapProject.shl",
+					"settings":
+					{
+						"buffer_size": 4813,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4711,
+								4711
+							]
+						],
+						"settings":
+						{
+							"annotations":
+							[
+								"TODO",
+								"README",
+								"FIXME"
+							],
+							"csslint_options":
+							{
+								"adjoining-classes": "warning",
+								"box-model": true,
+								"box-sizing": "warning",
+								"compatible-vendor-prefixes": "warning",
+								"display-property-grouping": true,
+								"duplicate-background-images": "warning",
+								"duplicate-properties": true,
+								"empty-rules": true,
+								"errors": true,
+								"fallback-colors": "warning",
+								"floats": "warning",
+								"font-faces": "warning",
+								"font-sizes": "warning",
+								"gradients": "warning",
+								"ids": "warning",
+								"import": "warning",
+								"important": "warning",
+								"known-properties": true,
+								"outline-none": "warning",
+								"overqualified-elements": "warning",
+								"qualified-headings": "warning",
+								"regex-selectors": "warning",
+								"rules-count": "warning",
+								"shorthand": "warning",
+								"star-property-hack": "warning",
+								"text-indent": "warning",
+								"underscore-property-hack": "warning",
+								"unique-headings": "warning",
+								"universal-selector": "warning",
+								"vendor-prefix": true,
+								"zero-units": "warning"
+							},
+							"gjslint_ignore":
+							[
+								110.0
+							],
+							"gjslint_options":
+							[
+							],
+							"javascript_linter": "jshint",
+							"jshint_options":
+							{
+								"browser": true,
+								"evil": true,
+								"regexdash": true,
+								"sub": true,
+								"trailing": true,
+								"wsh": true
+							},
+							"pep8": true,
+							"pep8_ignore":
+							[
+								"E501"
+							],
+							"perl_linter": "perlcritic",
+							"pyflakes_ignore":
+							[
+							],
+							"pyflakes_ignore_import_*": true,
+							"sublimelinter": true,
+							"sublimelinter_delay": 2.0,
+							"sublimelinter_disable":
+							[
+							],
+							"sublimelinter_executable_map":
+							{
+							},
+							"sublimelinter_fill_outlines": false,
+							"sublimelinter_gutter_marks": false,
+							"sublimelinter_mark_style": "outline",
+							"sublimelinter_notes": false,
+							"sublimelinter_objj_check_ascii": false,
+							"sublimelinter_popup_errors_on_save": false,
+							"sublimelinter_syntax_map":
+							{
+								"C++": "c",
+								"Python Django": "python",
+								"Ruby on Rails": "ruby"
+							},
+							"sublimelinter_wrap_find": true,
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 190.0,
+						"translation.y": 1794.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "chapter1/www/framework/utility.js",
+					"settings":
+					{
+						"buffer_size": 13178,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4490,
+								4490
+							]
+						],
+						"settings":
+						{
+							"annotations":
+							[
+								"TODO",
+								"README",
+								"FIXME"
+							],
+							"csslint_options":
+							{
+								"adjoining-classes": "warning",
+								"box-model": true,
+								"box-sizing": "warning",
+								"compatible-vendor-prefixes": "warning",
+								"display-property-grouping": true,
+								"duplicate-background-images": "warning",
+								"duplicate-properties": true,
+								"empty-rules": true,
+								"errors": true,
+								"fallback-colors": "warning",
+								"floats": "warning",
+								"font-faces": "warning",
+								"font-sizes": "warning",
+								"gradients": "warning",
+								"ids": "warning",
+								"import": "warning",
+								"important": "warning",
+								"known-properties": true,
+								"outline-none": "warning",
+								"overqualified-elements": "warning",
+								"qualified-headings": "warning",
+								"regex-selectors": "warning",
+								"rules-count": "warning",
+								"shorthand": "warning",
+								"star-property-hack": "warning",
+								"text-indent": "warning",
+								"underscore-property-hack": "warning",
+								"unique-headings": "warning",
+								"universal-selector": "warning",
+								"vendor-prefix": true,
+								"zero-units": "warning"
+							},
+							"gjslint_ignore":
+							[
+								110.0
+							],
+							"gjslint_options":
+							[
+							],
+							"javascript_linter": "jshint",
+							"jshint_options":
+							{
+								"browser": true,
+								"evil": true,
+								"regexdash": true,
+								"sub": true,
+								"trailing": true,
+								"wsh": true
+							},
+							"pep8": true,
+							"pep8_ignore":
+							[
+								"E501"
+							],
+							"perl_linter": "perlcritic",
+							"pyflakes_ignore":
+							[
+							],
+							"pyflakes_ignore_import_*": true,
+							"sublimelinter": true,
+							"sublimelinter_delay": 2.0,
+							"sublimelinter_disable":
+							[
+							],
+							"sublimelinter_executable_map":
+							{
+							},
+							"sublimelinter_fill_outlines": false,
+							"sublimelinter_gutter_marks": false,
+							"sublimelinter_mark_style": "outline",
+							"sublimelinter_notes": false,
+							"sublimelinter_objj_check_ascii": false,
+							"sublimelinter_popup_errors_on_save": false,
+							"sublimelinter_syntax_map":
+							{
+								"C++": "c",
+								"Python Django": "python",
+								"Ruby on Rails": "ruby"
+							},
+							"sublimelinter_wrap_find": true,
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 3488.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"replace":
+	{
+		"height": 68.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}

@@ -1,0 +1,101 @@
+.wince #rootContainer {
+	background-color: #000;
+}
+
+.navigationBar {
+	background-image: url(../images/NavigationBar.png);
+	color: #FFF;
+	background-color: transparent;
+	z-index: 1;
+	box-shadow: 0px 3px 10px #000;
+}
+
+.toolBar {
+	background-image: url(../images/ToolBar.png);
+	color: #FFF;
+	background-color: transparent;
+	z-index: 1;
+	box-shadow: 0px -3px 10px #000;
+}
+
+.android .navigationBar, .android .toolBar {
+	background-image: none;
+	background-color: #333;
+	color: #FFF;
+	text-align: left;
+}
+
+.wince .navigationBar, .wince .toolBar {
+	background-image: none;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	border-radius: 0px;
+}
+
+.content {
+	background-color: #000;
+	color: #CCC;
+}
+
+.ios .content {
+	background-image: url(../images/Background.png);
+	background-repeat: repeat;
+	background-size: 50% 50%;
+}
+
+.wince .content {
+	background-image: none !important;
+	background-color: transparent !important;
+	color: #FFF;
+}
+
+.viewBackground {
+	background-color: #000;
+}
+
+.wince .viewBackground {
+	background-image: none !important;
+	border-radius: 0px;
+}
+
+.ios .navigationBar .barButton {
+	background-color: rgba(0,0,0,.25);
+}
+
+.wince .navigationBar .barButton {
+	top: 20px;
+}
+
+.documentTapArea {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.documentContainer {
+	height: 102px;
+  width: 102px;
+	display: inline-block;
+	color: #333;
+  margin-top:1em;
+}
+
+.documentImage {
+	top: 0px;
+	left: 0px;
+	width: 88px;
+	height: 88px;
+	position: absolute;
+}
+
+.documentImage img,
+.documentImage canvas {
+	margin: 6px;
+  border: 3px solid #FFF;
+  box-shadow: inset 0px 0px 5px #000, 0px 0px 5px #000;
+  background-color: #444;
+  position: relative;
+}
+

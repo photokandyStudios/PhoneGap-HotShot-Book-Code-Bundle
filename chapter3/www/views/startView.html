@@ -1,0 +1,63 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Start" View for Filer                              # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="startView_AppTitle"></div>
+  <button class="barButton" id="startView_startButton" style="right:10px"></button>
+ </div>
+ <div class="content avoidNavigationBar" id="startView_welcome">
+ </div>
+</div>
+
+<div id="startView_welcome_en" class="hidden">
+ <h2>PhoneGap Hotshot Sample Application</h2>
+ <h3>Chapter 3: Being Productive</h3>
+ <p>This application demonstrates how to write
+    productivity applications using PhoneGap,
+    including the ability to read and write
+    files to achieve persistence.</p>
+ <p>Icons from App-bits (http://app-bits.com/free-icons.html).</p>
+ <p>Textures from Subtle Patterns (http://subtlepatterns.com)</p>
+</div>
+
+<script>
+  
+  var startView = $ge("startView") || {};  // properly namespace
+  
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  startView.initializeView = function ()
+  {
+    startView.applicationTitleImage = $ge("startView_AppTitle");
+    startView.applicationTitleImage.innerHTML = __T("APP_TITLE");
+    
+    startView.startButton = $ge("startView_startButton");
+    startView.startButton.innerHTML = __T("START");
+    PKUI.CORE.addTouchListener( startView.startButton, "touchend", startView.startGame );
+    
+    // based on our locale, load the appropriate
+    // welcome content.
+    
+    var theWelcomeContent = $geLocale("startView_welcome");
+    $ge("startView_welcome").innerHTML = theWelcomeContent.innerHTML;
+  
+  }
+  
+  /**
+   *
+   * Called when the user touches the "Start" button.
+   *
+   */
+  startView.startGame = function()
+  {
+    PKUI.CORE.pushView ( documentsView );
+  }
+  
+</script>

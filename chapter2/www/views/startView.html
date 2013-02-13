@@ -1,0 +1,62 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Start" View for Socializer                         # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="startView_AppTitle"></div>
+  <button class="barButton" id="startView_startButton" style="right:10px"></button>
+ </div>
+ <div class="content avoidNavigationBar" id="startView_welcome">
+ </div>
+</div>
+
+<div id="startView_welcome_en" class="hidden">
+ <h2>PhoneGap Hotshot Sample Application</h2>
+ <h3>Chapter 2: Let's Get Social</h3>
+ <p>This application demonstrates interaction
+    with a social network (Twitter), including
+    loading and displaying a stream and using
+    Cordova Plugins to share content via your
+    Twitter stream.</p>
+</div>
+
+<script>
+  
+  var startView = $ge("startView") || {};  // properly namespace
+  
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  startView.initializeView = function ()
+  {
+    startView.applicationTitleImage = $ge("startView_AppTitle");
+    startView.applicationTitleImage.innerHTML = __T("APP_TITLE");
+    
+    startView.startButton = $ge("startView_startButton");
+    startView.startButton.innerHTML = __T("START");
+    PKUI.CORE.addTouchListener( startView.startButton, "touchend", startView.startGame );
+    
+    // based on our locale, load the appropriate
+    // welcome content.
+    
+    var theWelcomeContent = $geLocale("startView_welcome");
+    $ge("startView_welcome").innerHTML = theWelcomeContent.innerHTML;
+  
+  }
+  
+  /**
+   *
+   * Called when the user touches the "Start" button.
+   *
+   */
+  startView.startGame = function()
+  {
+    PKUI.CORE.pushView ( socialView );
+  }
+  
+</script>

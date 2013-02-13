@@ -1,0 +1,334 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Documents" view for PathRec                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="documentsView_title"></div>
+  <button class="barButton" id="documentsView_createButton" style="right:10px" ></button>
+ </div>
+ <div class="content avoidNavigationBar " style="padding:0; overflow: scroll;" id="documentsView_scroller">
+   <div id="documentsView_contentArea" style="padding: 0; height: auto; position: relative;">
+   </div>
+ </div>
+</div>
+
+<div id="documentsView_documentTemplate" class="hidden">
+ <div class="documentContainer">
+  <div class="documentTapArea" onclick="documentsView.documentContainerTapped(%INDEX%)"></div>
+  <div class="documentImage">
+   <img src="./images/DocumentImage.png" border=0 onclick="documentsView.documentIconTapped(%INDEX%)"/>
+  </div>
+  <div class="documentTitle" onclick="documentsView.documentNameTapped(%INDEX%)">
+   <span >%TITLE%</span>
+  </div>
+  <div class="documentActions">
+   <img src="./images/Copy.png" width=28 height=28 border=0 onclick="documentsView.copyDocument(%INDEX%)" />
+   <img src="./images/Share.png" width=27 height=28  border=0 onclick="documentsView.shareDocument(%INDEX%)" />
+   <img src="./images/Trash.png" width=28 height=28  border=0 onclick="documentsView.deleteDocument(%INDEX%)" />
+  </div>
+ </div>
+</div>
+
+<script>
+/*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var documentsView = $ge("documentsView") || {};
+  documentsView.firstTime = true;
+  documentsView.lastScrollLeft = 0;
+  documentsView.lastScrollTop = 0;
+  documentsView.myScroll = {};
+  documentsView.availableDocuments = {};
+  
+  /**
+  *
+  * Initializes the view.
+  *
+  */
+  documentsView.initializeView = function ()
+  {
+    PKUTIL.include ( ["./models/PathRecDocumentCollection.js",
+                      "./models/PathRecDocument.js"], function ()
+                     {
+                        // display the list of available documents
+                        documentsView.displayAvailableDocuments();
+                     }
+                   );
+
+    documentsView.viewTitle = $ge("documentsView_title");
+    documentsView.viewTitle.innerHTML = __T("APP_TITLE");
+
+    documentsView.createButton = $ge("documentsView_createButton");
+    documentsView.createButton.innerHTML = __T("CREATE");
+    PKUI.CORE.addTouchListener(documentsView.createButton, "touchend", function () { documentsView.createNewDocument(); });
+
+    if (device.platform != "WinCE")
+    {
+        documentsView.myScroll = new SCROLLER.GenericScroller('documentsView_contentArea');
+    }    
+  }
+  
+  documentsView.documentIconTapped = function ( idx )
+  {
+    if (PKDEVICE.platform() == "ios")
+    {
+      documentsView.openDocument(idx);
+    }
+    else
+    {
+      documentsView.renameDocument(idx);
+    }
+  }
+  
+  documentsView.documentNameTapped = function ( idx )
+  {
+    if (PKDEVICE.platform() == "ios")
+    {
+      documentsView.renameDocument(idx);
+    }
+    else
+    {
+      documentsView.openDocument(idx);
+    }
+  }
+
+  documentsView.documentContainerTapped = function ( idx )
+  {
+    if (PKDEVICE.platform() == "ios")
+    {
+      return;
+    }
+    else
+    {
+      documentsView.openDocument(idx);
+    }
+  }
+
+  documentsView.displayAvailableDocuments = function ()
+  {
+    
+    documentsView.availableDocuments = new DOCS.PathRecDocumentCollection (
+        documentsView.documentIterator
+        ,
+        function () // failure function
+        {
+            var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                  __T("I couldn't read your persistent storage!"));
+            anAlert.show();
+        }
+    );
+    
+  }
+  
+  documentsView.reloadAvailableDocuments = function ()
+  {
+    documentsView.availableDocuments.loadFileSystem (
+        documentsView.documentIterator
+        ,
+        function () // failure function
+        {
+            var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                  __T("I couldn't read your persistent storage!"));
+            anAlert.show();
+        }
+    );
+    
+  }
+  
+  documentsView.documentIterator = function ( o )
+    {
+        var theHTML = "";
+        var theNumberOfDocuments = 0;
+        for (var i=0; i<o.getDocumentCount(); i++)
+        {
+            var theDocumentEntry = o.getDocumentAtIndex ( i );
+            
+            theHTML += PKUTIL.instanceOfTemplate ( $ge("documentsView_documentTemplate"),
+                                                   { "title": theDocumentEntry.name.substr(0, theDocumentEntry.name.length-4),
+                                                     "index": i
+                                                   }
+                                                 );
+            theNumberOfDocuments++;
+        }
+        if (PKDEVICE.platform()=="ios")
+        {
+        	$ge("documentsView_contentArea").style.width = (((theNumberOfDocuments) * 246)) + "px";
+        }
+        
+        $ge("documentsView_contentArea").innerHTML = theHTML;
+    }
+
+  documentsView.openDocument = function ( idx )
+  { 
+        documentsView.availableDocuments.openDocumentAtIndex
+            ( idx,
+              function ()
+              {
+                mapView.setFileEntry ( documentsView.availableDocuments.getFileEntry() );
+                PKUI.CORE.pushView ( mapView );
+              },
+              function (e) { console.log (JSON.stringify(e)) }
+            );
+  }
+  
+  documentsView.createNewDocument = function ()
+  {
+        var anAlert = new PKUI.MESSAGE.Prompt (__T("Create Document"),
+                                               __T("This will create a new document with the name below:"),
+                                               "text",
+                                               "New Path " + __D(new Date(),"yyyy-MM-dd-HH-mm-ss"),
+                                               __T("Don't Create<|Create>"),
+                                                function (i)
+                                                {
+                                                  if (i===1)
+                                                  {
+                                                    documentsView.availableDocuments.createDocument
+                                                        ( ""+anAlert.inputElement.value+APP.globalFileExtension,
+                                                          function ()
+                                                          {
+                                                            mapView.setFileEntry ( documentsView.availableDocuments.getFileEntry() );
+                                                            PKUI.CORE.pushView ( mapView );
+                                                          },
+                                                          function (e)
+                                                          {
+                                                            var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                              __T("Couldn't create the file.") );
+                                                            anAlert.show();
+                                                          }
+                                                        );
+                                                  }
+                                                }
+                                               );
+        anAlert.show();
+  }
+  
+  documentsView.renameDocument = function ( idx )
+  {
+    var theFileName = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    theFileName = theFileName.substr(0,theFileName.length-4);
+    
+    var anAlert = new PKUI.MESSAGE.Prompt (__T("Rename Document"),
+                                           __T("Rename your document to the following:"),
+                                           "text",
+                                           theFileName,
+                                           __T("Cancel<|Rename>"),
+                                            function (i)
+                                            { 
+                                              if (i==1)
+                                              {
+                                                var theNewFileName = ""+anAlert.inputElement.value+APP.globalFileExtension;
+                                                
+                                                try {
+                                                documentsView.availableDocuments.renameDocumentAtIndexTo
+                                                   ( idx, theNewFileName, documentsView.documentIterator,
+                                                     function ( e )
+                                                     {
+                                                        var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                          __T("Couldn't rename the file.") );
+                                                        anAlert.show();
+                                                     }
+                                                   );
+                                                }
+                                                catch (e)
+                                                {
+                                                    var anotherAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                      __T("Couldn't rename the file.") );
+                                                    anotherAlert.show();
+                                                }
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+
+  documentsView.copyDocument = function ( idx )
+  {
+    var theFileName = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    theFileName = theFileName.substr(0,theFileName.length-4);
+
+    var anAlert = new PKUI.MESSAGE.Prompt (__T("Copy Document"),
+                                           __T("This will create a duplicate document with the following name:"),
+                                           "text",
+                                           theFileName + " Copy",
+                                           __T("Cancel<|Copy>"),
+                                            function (i)
+                                            {
+                                              if (i==1)
+                                              {
+                                                var theNewFileName = ""+anAlert.inputElement.value+APP.globalFileExtension;
+                                                
+                                                documentsView.availableDocuments.copyDocumentAtIndexTo
+                                                   ( idx, theNewFileName, documentsView.documentIterator,
+                                                   function(e)
+                                                   {
+                                                    
+                                                    var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                      __T("Couldn't copy the file.") );
+                                                    anAlert.show();
+                                                   }
+                                                );
+                                                
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+
+  documentsView.deleteDocument = function ( idx )
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm (__T("Remove Document"),
+                                            __T("This will remove the document. This action is unrecoverable."),
+                                            __T("Don't Remove<|Remove*"),
+                                            function (i)
+                                            {
+                                              if (i==1)
+                                              {
+                                                documentsView.availableDocuments.deleteDocumentAtIndex
+                                                   ( idx, documentsView.documentIterator,
+                                                     function (e)
+                                                     {
+                                                            var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                              __T("Couldn't delete the file.") );
+                                                            anAlert.show();
+                                                     }
+                                                   );
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  */
+  documentsView.viewWillAppear = function ()
+  {
+    if (documentsView.myScroll.scrollTo)
+    {
+      PKUTIL.delay ( 50, function ()
+        {
+          documentsView.myScroll.scrollTo ( documentsView.lastScrollLeft,
+                                            documentsView.lastScrollTop);
+        }
+      );
+    }
+  }
+  
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  documentsView.viewWillHide = function ()
+  {
+    if (documentsView.myScroll.getScrollLeft)
+    {
+        documentsView.lastScrollLeft = documentsView.myScroll.getScrollLeft();
+        documentsView.lastScrollTop  = documentsView.myScroll.getScrollTop();
+    }
+  }
+
+</script>

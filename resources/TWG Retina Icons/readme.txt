@@ -1,0 +1,1 @@
+See http://blog.twg.ca/2010/11/retina-display-icon-set/ for original.

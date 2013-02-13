@@ -1,0 +1,168 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Filer" view for Filer                              # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <button class="barButton" id="fileView_documentsButton" style="left:10px" ></button>
+  <div id="fileView_title"></div>
+ </div>
+ <div class="content avoidNavigationBar" style="padding:0; " id="fileView_scroller">
+   <div id="fileView_contentArea">
+     <textarea id="fileView_text"></textarea>
+   </div>
+ </div>
+</div>
+
+
+
+
+<script>
+
+  var fileView = $ge("fileView") || {};
+  
+  fileView.theFileEntry = {};
+  fileView.theFilerDocument = {};
+  fileView.theSaveTimer = -1;
+  fileView.hasLoadedDocument = false;
+  
+  fileView.setFileEntry = function ( theNewFileEntry )
+  {
+      if (fileView.hasLoadedDocument)
+      {
+        // we're potentially loading a NEW document -- save the old one.
+        if (fileView.theSaveTimer!==-1)
+        {
+            // clear the interval so we don't save again.
+            clearInterval (fileView.theSaveTimer);
+            fileView.theSaveTimer = -1;
+        }
+        fileView.saveDocument();    // force the save so we have the up-to-date contents
+        documentsView.reloadAvailableDocuments(); // reload our directory structure (just in case)
+      }
+
+      // now load the correct document
+      fileView.theFileEntry = theNewFileEntry;
+      fileView.theFilerDocument = {};
+      fileView.hasLoadedDocument = true;
+      fileView.loadDocument();
+  }
+
+  /**
+  *
+  * Initializes the view.
+  *
+  */
+  fileView.initializeView = function ()
+  {
+    fileView.viewTitle = $ge("fileView_title");
+    fileView.viewTitle.innerHTML = __T("Select or Create a Document");
+    PKUI.CORE.addTouchListener(fileView.viewTitle, "touchend", function () { fileView.entitleDocument(); } ); 
+
+    fileView.documentsButton = $ge("fileView_documentsButton");
+    fileView.documentsButton.innerHTML = __T("DOCUMENTS");
+    PKUI.CORE.addTouchListener(fileView.documentsButton, "touchend", function () {APP.toggleSidebar(); } )
+ 
+    $ge("fileView_text").style.display = "none"; 
+  }
+  
+  fileView.entitleDocument = function ()
+  {
+    if (!fileView.hasLoadedDocument) { return; }
+
+    var anAlert = new PKUI.MESSAGE.Prompt (__T("Entitle"),
+                                           __T("What's the title of this document?"),
+                                           "text",
+                                           fileView.theFilerDocument.getTitle(),
+                                           __T("Cancel<|Entitle>"),
+                                            function (i)
+                                            { 
+                                              if (i==1)
+                                              {
+                                                fileView.theFilerDocument.setTitle ( anAlert.inputElement.value );
+                                                fileView.viewTitle.innerHTML = fileView.theFilerDocument.getTitle();
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+  
+  fileView.loadDocument = function ()
+  {
+    // load our document.
+    fileView.viewTitle = $ge("fileView_title");
+    fileView.viewTitle.innerHTML = fileView.theFileEntry.name.substr(0,
+                                          fileView.theFileEntry.name.length-4);
+    fileView.theTextElement = $ge("fileView_text");
+    fileView.theTextElement.value = "";
+    $ge("fileView_text").style.display = "block";
+
+    fileView.theFilerDocument = new DOC.Filer (
+                                            fileView.theFileEntry,
+                                            function ()
+                                            {
+                                              PKUTIL.delay(100, function () 
+                                                {
+                                                  console.log (JSON.stringify(fileView.theFilerDocument));
+                                                  fileView.viewTitle.innerHTML = fileView.theFilerDocument.getTitle();
+                                                  fileView.theTextElement.value = fileView.theFilerDocument.getText();
+                                                  fileView.theSaveTimer = setInterval ( fileView.saveDocument, 5000 );
+                                                  
+                                                } );
+                                            },
+                                            function (e)
+                                            {
+                                                PKUI.CORE.popView();
+                                                var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                  __T("Couldn't open the file.") );
+                                                anAlert.show();
+                                            }
+                                          );
+  }
+  
+  fileView.saveDocument = function ()
+  {
+    if (!fileView.hasLoadedDocument) { return; }
+      fileView.theFilerDocument.setText ( fileView.theTextElement.value );
+      fileView.theFilerDocument.saveFileContents (
+                                                   function ()
+                                                   {
+                                                       console.log ("Auto save successful.");
+                                                   },
+                                                   function (e)
+                                                   {
+                                                        PKUI.CORE.popView();
+                                                        var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                          __T("Couldn't save to the file.") );
+                                                        anAlert.show();
+                                                   }
+                                                 );
+  }
+  
+
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  */
+  fileView.viewWillAppear = function ()
+  {
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  fileView.viewWillHide = function ()
+  {
+  }
+
+  fileView.backButtonPressed = function ()
+  {
+  }
+
+  
+</script>

@@ -1,0 +1,501 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Documents" view for PathRec                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+  <div class="navigationBar">
+    <div style="padding-top:7px" id="documentsView_title"></div>
+    <button class="barButton" id="documentsView_editButton" style="right:10px" ></button>
+  </div>
+  <div class="content avoidNavigationBar avoidToolBar" style="padding:0; overflow: scroll;" id="documentsView_scroller">
+    <div id="documentsView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+  </div>
+  <div class="toolBar">
+    <span class="icon" id="documentsView_cameraButton"><img src="./images/photo_64.png" width=32 height=32 /></span>
+    <span class="icon" id="documentsView_importButton"><img src="./images/film_64.png" width=32 height=32 /></span>
+    <span class="icon" id="documentsView_deleteButton"><img src="./images/trash_64.png" width=32 height=32 /></span>
+    <span class="icon" id="documentsView_shareButton"><img src="./images/man_64.png" width=32 height=32 /></span>
+  </div>
+</div>
+
+<div id="documentsView_documentTemplate" class="hidden">
+  <div class="documentContainer" id="documentsView_item%INDEX%">
+    <div class="documentImage">
+      <canvas width=84 height=84
+              id="documentsView_item%INDEX%_canvas"
+              onclick="documentsView.documentContainerTapped(%INDEX%);"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var documentsView = $ge("documentsView") || {};
+  documentsView.firstTime = true;
+  documentsView.lastScrollLeft = 0;
+  documentsView.lastScrollTop = 0;
+  documentsView.myScroll = {};
+  documentsView.availableDocuments = {};
+  documentsView.inSelectionMode = false;
+  documentsView.selectedItems = [];
+  documentsView.globalAlert = null;
+
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  documentsView.initializeView = function()
+  {
+    PKUTIL.include(["./models/ImageDocumentCollection.js", "./models/VoiceRecDocument.js"], function()
+    {
+      // display the list of available documents
+      documentsView.displayAvailableDocuments();
+    });
+
+    documentsView.viewTitle = $ge("documentsView_title");
+    documentsView.viewTitle.innerHTML = __T("APP_TITLE_IMG");
+
+    documentsView.editButton = $ge("documentsView_editButton");
+    documentsView.editButton.innerHTML = __T("EDIT");
+    PKUI.CORE.addTouchListener(documentsView.editButton, "touchend",
+      function(e)
+      {
+        documentsView.toggleSelection();
+      }
+    );
+    
+    documentsView.cameraButton = $ge("documentsView_cameraButton");
+    PKUI.CORE.addTouchListener(documentsView.cameraButton, "touchend",
+      function(e)
+      {
+        documentsView.takePicture();
+      }
+    );
+    
+    documentsView.importButton = $ge("documentsView_importButton");
+    PKUI.CORE.addTouchListener(documentsView.importButton, "touchend",
+      function(e)
+      {
+        documentsView.importPicture();
+      }
+    );
+    
+    
+    documentsView.deleteButton = $ge("documentsView_deleteButton");
+    documentsView.deleteButton.style.display="none";
+    PKUI.CORE.addTouchListener(documentsView.deleteButton, "touchend",
+      function(e)
+      {
+        documentsView.confirmDeletePictures();
+      }
+    );
+    
+    documentsView.shareButton = $ge("documentsView_shareButton");
+    documentsView.shareButton.style.display="none";
+    //CHALLENGE: Implement sharing.
+
+    if (device.platform != "WinCE")
+    {
+      documentsView.myScroll = new SCROLLER.GenericScroller('documentsView_contentArea');
+    }
+  }
+  
+  documentsView.toggleSelection = function ()
+  {
+    var i;
+    var anElement;
+    documentsView.inSelectionMode = !documentsView.inSelectionMode;
+    if (documentsView.inSelectionMode)
+    {
+      documentsView.editButton.innerHTML=__T("DONE");
+      documentsView.selectedItems=[];
+      for (i=0; i<documentsView.availableDocuments.getDocumentCount(); i++)
+      {
+        anElement = $ge("documentsView_item"+i+"_canvas");
+        anElement.style.border = "3px solid #FF8";
+      }
+      
+      documentsView.cameraButton.style.display="none";
+      documentsView.importButton.style.display="none";
+      documentsView.deleteButton.style.display="none";
+      documentsView.shareButton.style.display="none";
+      
+    }
+    else
+    {
+      documentsView.editButton.innerHTML=__T("EDIT");
+      for (i=0; i<documentsView.availableDocuments.getDocumentCount(); i++)
+      {
+        anElement = $ge("documentsView_item"+i+"_canvas");
+        anElement.style.border = "3px solid #FFF";
+      }
+      
+      documentsView.cameraButton.style.display="inline";
+      documentsView.importButton.style.display="inline";
+      documentsView.deleteButton.style.display="none";
+      documentsView.shareButton.style.display="none";
+      
+    }
+  }
+
+  documentsView.documentContainerTapped = function(idx)
+  {
+    var theElement = $ge("documentsView_item" + idx + "_canvas");
+    if (documentsView.inSelectionMode)
+    {
+      // toggle selection
+      if ( documentsView.selectedItems.indexOf (idx) > -1 )
+      {
+        // deselect
+        theElement.style.border = "3px solid #FF8";
+        documentsView.selectedItems.splice (
+          documentsView.selectedItems.indexOf( idx), 1);
+      }
+      else
+      {
+        // select
+        theElement.style.border = "3px solid #800";
+        documentsView.selectedItems.push(idx);
+      }
+      // if there are any items selected, change
+      // the tool bar
+      if (documentsView.selectedItems.length>0)
+      {
+        documentsView.deleteButton.style.display="inline";
+        documentsView.shareButton.style.display="inline";
+      }
+      else
+      {
+        documentsView.deleteButton.style.display="none";
+        documentsView.shareButton.style.display="none";
+      }
+    }
+    else
+    {
+      PKUI.CORE.pushView (imageView);
+      PKUTIL.delay(500, function()
+      {
+        imageView.setImage ( documentsView.availableDocuments.getDocumentAtIndex(idx).fullPath, idx );
+      } );
+    }
+  }
+  
+  documentsView.takePicture = function()
+  {
+    documentsView.doPicture ( Camera.PictureSourceType.CAMERA );
+  }
+  
+  documentsView.importPicture = function()
+  {
+    documentsView.doPicture ( Camera.PictureSourceType.PHOTOLIBRARY );
+  }
+  documentsView.doPicture = function( source )
+  {
+    navigator.camera.getPicture ( function (uri)
+                                  {
+                                    console.log (uri);
+                                    PKFILE.moveFileTo ( uri, "doc://" + PKUTIL.getUnixTime() + ".jpg",
+                                                        function ()
+                                                        {
+                                                          documentsView.reloadAvailableDocuments();
+                                                        },
+                                                        function (evt)
+                                                        {
+                                                          console.log (JSON.stringify(evt));
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Failed to save the image."));
+      anAlert.show();
+                                                        } )
+                                  },
+                                  function (msg)
+                                  {
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), msg);
+      anAlert.show();
+                                  },
+                                  { quality: 50,
+                                    destinationType: Camera.DestinationType.FILE_URI,
+                                    sourceType: source,
+                                    encodingType: Camera.EncodingType.JPEG,
+                                    mediaType: Camera.MediaType.PICTURE,
+                                    correctOrientation: true,
+                                    saveToPhotoAlbum: false
+                                  }
+                                );
+  }
+  
+  documentsView.confirmDeletePictures = function ()
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Delete Image(s)"), __T("This will delete the selected image(s). This action is unrecoverable."), __T("Don't Delete<|Delete*"), function(i)
+    {
+      if (i == 1)
+      {
+        PKUTIL.delay ( 100, documentsView.deleteSelectedPictures );
+      }
+    });
+    anAlert.show();
+  }
+  
+  documentsView.deleteSelectedPictures = function ()
+  {
+    if (documentsView.selectedItems.length > 0)
+    {
+      var currentIndex = documentsView.selectedItems.pop();
+      if (documentsView.globalAlert == null)
+      {
+        documentsView.globalAlert = new PKUI.MESSAGE.Alert(__T("Please Wait"), __T("Deleting Selected Images..."));
+        documentsView.globalAlert.show();
+      }
+      PKUTIL.delay (100, function () {
+        PKFILE.removeFile ( documentsView.availableDocuments.getDocumentAtIndex(currentIndex).fullPath,
+                            documentsView.deleteSelectedPictures,
+                            function (e)
+                            {
+                              documentsView.globalAlert.hide();
+                              var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"), __T("Failed to remove file."));
+                              anAlert.show();
+                              documentsView.reloadAvailableDocuments();
+                            }
+                          );
+        }
+      );
+    }
+    else
+    {
+      if (documentsView.globalAlert)
+      {
+        documentsView.toggleSelection();
+        documentsView.reloadAvailableDocuments();
+        documentsView.globalAlert.hide();
+        PKUTIL.delay (750, function() { documentsView.globalAlert = null; } );
+      }
+      else
+      {
+        // we SO shouldn't be here!
+        console.log ("ASSERT: We shouldn't be able to delete anything without having prior selected something.");
+      }
+    }
+  }
+
+  documentsView.displayAvailableDocuments = function()
+  {
+
+    documentsView.availableDocuments = new DOCS.ImageDocumentCollection(documentsView.documentIterator, function()// failure function
+    {
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("I couldn't read your persistent storage!"));
+      anAlert.show();
+    });
+
+  }
+
+  documentsView.reloadAvailableDocuments = function()
+  {
+    documentsView.availableDocuments.loadFileSystem(documentsView.documentIterator, function()// failure function
+    {
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("I couldn't read your persistent storage!"));
+      anAlert.show();
+    });
+
+  }
+
+  documentsView.documentIterator = function(o)
+  {
+    var theHTML = "";
+    var theNumberOfDocuments = 0;
+    for (var i = 0; i < o.getDocumentCount(); i++)
+    {
+      var theDocumentEntry = o.getDocumentAtIndex(i);
+
+      theHTML += PKUTIL.instanceOfTemplate($ge("documentsView_documentTemplate"),
+      { "src" : theDocumentEntry.fullPath,
+        "index" : i
+      });
+      theNumberOfDocuments++;
+    }
+
+    $ge("documentsView_contentArea").innerHTML = theHTML;
+    PKUTIL.delay(100, function()
+    {
+      for (var i = 0; i < theNumberOfDocuments; i++)
+      {
+        var theDocumentEntry = o.getDocumentAtIndex(i);
+        // attach the long-pres
+        var theElement = $ge("documentsView_item" + i + "");
+        var theLPGesture = new GESTURES.LongPressGesture(theElement, function(o)
+        {
+          documentsView.longPressReceived(o.data);
+        });
+        theLPGesture.data = i;
+        // render the actual image(!)
+        var img = new Image();
+        img.i = i;
+        img.onload = function ()
+        {
+          var newWidth = 84;
+          var newHeight = (this.height / this.width) * 84;
+          if (newHeight > 84)
+          {
+            newHeight = 84;
+            newWidth = (this.width / this.height) * 84;
+          }
+          
+          var newLeft = 42 - (newWidth/2);
+          var newTop = 42 - (newHeight/2);
+          
+          var theCanvas = $ge("documentsView_item" + this.i + "_canvas");
+          theCanvas.setAttribute ("width", newWidth * window.devicePixelRatio);
+          theCanvas.setAttribute ("height",newHeight * window.devicePixelRatio);
+          theCanvas.style.width = ""+newWidth+"px"; theCanvas.style.height = ""+newHeight+"px";
+          theCanvas.style.left  = ""+newLeft +"px"; theCanvas.style.top = ""+newTop+"px";
+          
+          var theCanvasCtx = theCanvas.getContext("2d");
+          theCanvasCtx.save();
+          theCanvasCtx.scale (window.devicePixelRatio, window.devicePixelRatio);
+          theCanvasCtx.imageSmoothingEnabled = false;
+          theCanvasCtx.drawImage (this, 0, 0, newWidth, newHeight);
+          theCanvasCtx.restore();
+        }
+        img.src = theDocumentEntry.fullPath;
+      }
+    });
+  }
+
+  documentsView.longPressReceived = function(idx)
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Select Action"), __T("Select an action to perform:"), "Copy Image|Rename Image|Delete Image*|Cancel<", function(i)
+    {
+      PKUTIL.delay(100, function()
+      {
+        if (i == 0)
+        {
+          documentsView.copyDocument(idx);
+        }
+        if (i == 1)
+        {
+          documentsView.renameDocument(idx);
+        }
+        if (i == 2)
+        {
+          documentsView.deleteDocument(idx);
+        }
+      });
+    });
+    anAlert.show();
+  }
+
+  documentsView.openDocument = function(idx)
+  {
+    documentsView.availableDocuments.openDocumentAtIndex(idx, function()
+    {
+      mapView.setFileEntry(documentsView.availableDocuments.getFileEntry());
+      PKUI.CORE.pushView(mapView);
+    }, function(e)
+    {
+      console.log(JSON.stringify(e))
+    });
+  }
+
+  documentsView.renameDocument = function(idx)
+  {
+    var theFile = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    var theFileName = PKUTIL.FILE.getFileNamePart(theFile);
+    var theFileExt = PKUTIL.FILE.getFileExtensionPart(theFile);
+
+    var anAlert = new PKUI.MESSAGE.Prompt(__T("Rename Image"), __T("Rename your image to the following:"), "text", theFileName, __T("Cancel<|Rename>"), function(i)
+    {
+      if (i == 1)
+      {
+        if (documentsView.documentCurrentlyPlaying > -1)
+        {
+          documentsView.currentDocument.releaseResources();
+        }
+        var theNewFileName = "" + anAlert.inputElement.value + PKUTIL.FILE.extensionSeparator + theFileExt;
+
+        try
+        {
+          documentsView.availableDocuments.renameDocumentAtIndexTo(idx, theNewFileName, documentsView.documentIterator, function(e)
+          {
+            var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't rename the file."));
+            anAlert.show();
+          });
+        } catch (e)
+        {
+          var anotherAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't rename the file."));
+          anotherAlert.show();
+        }
+      }
+    });
+    anAlert.show();
+  }
+
+  documentsView.copyDocument = function(idx)
+  {
+    var theFile = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    var theFileName = PKUTIL.FILE.getFileNamePart(theFile);
+    var theFileExt = PKUTIL.FILE.getFileExtensionPart(theFile);
+
+    var anAlert = new PKUI.MESSAGE.Prompt(__T("Copy Image"), __T("This will create a duplicate image with the following name:"), "text", theFileName + " Copy", __T("Cancel<|Copy>"), function(i)
+    {
+      if (i == 1)
+      {
+        var theNewFileName = "" + anAlert.inputElement.value + PKUTIL.FILE.extensionSeparator + theFileExt;
+
+        documentsView.availableDocuments.copyDocumentAtIndexTo(idx, theNewFileName, documentsView.documentIterator, function(e)
+        {
+
+          var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't copy the file."));
+          anAlert.show();
+        });
+
+      }
+    });
+    anAlert.show();
+  }
+
+  documentsView.deleteDocument = function(idx)
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Remove Image"), __T("This will remove the image. This action is unrecoverable."), __T("Don't Remove<|Remove*"), function(i)
+    {
+      if (i == 1)
+      {
+        documentsView.availableDocuments.deleteDocumentAtIndex(idx, documentsView.documentIterator, function(e)
+        {
+          var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't delete the file."));
+          anAlert.show();
+        });
+      }
+    });
+    anAlert.show();
+  }
+  /**
+   *
+   * Called by PKUI.CORE.pushView when we are about to appear.
+   *
+   */
+  documentsView.viewWillAppear = function()
+  {
+    if (documentsView.myScroll.scrollTo)
+    {
+      PKUTIL.delay(50, function()
+      {
+        documentsView.myScroll.scrollTo(documentsView.lastScrollLeft, documentsView.lastScrollTop);
+      });
+    }
+  }
+  /**
+   *
+   * Called by PKUI.CORE when we are about to be hidden
+   *
+   */
+  documentsView.viewWillHide = function()
+  {
+    if (documentsView.myScroll.getScrollLeft)
+    {
+      documentsView.lastScrollLeft = documentsView.myScroll.getScrollLeft();
+      documentsView.lastScrollTop = documentsView.myScroll.getScrollTop();
+    }
+  }
+
+</script>

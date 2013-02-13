@@ -1,0 +1,195 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Social" view for Socializer                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="content" style="padding:0; overflow: scroll; -webkit-overflow-scrolling: touch;" id="socialView_scroller">
+   <div id="socialView_contentArea" style="padding: 0; height: auto; position: relative;">
+   </div>
+ </div>
+</div>
+
+<div class="hidden" id="socialView_profileImageIcon">
+ <a class="profileImage" style="background-image:url(%PROFILE_IMAGE_URL%)"
+    href="javascript:socialView.loadStreamFor('@%SCREEN_NAME%');"></a>
+</div>
+
+<div class="hidden" id="socialView_twitterTemplate">
+ <div class="twitterItem" onclick="socialView.selectTweet(%INDEX%);">
+  <img src="%PROFILE_IMAGE_URL%" width=32 height=32 border=0 />
+  <div class="twitterName">
+   <span class="twitterRealName">%REAL_NAME%</span>
+   <span class="twitterScreenName">@%SCREEN_NAME%</span>
+  </div>
+  <div class="twitterTweet">%TWEET%</div>
+ </div>
+</div>
+
+<script>
+var socialView = $ge("socialView") || {};
+socialView.firstTime = true;
+socialView.currentStream = {};
+socialView.currentTitle = "";
+socialView.numberOfTweets = 100;
+/**
+ *
+ * Initializes the view.
+ *
+ */
+socialView.initializeView = function() {
+  PKUTIL.include(["./models/twitterStreams.js", "./models/twitterStream.js"], function() {
+    // load our toolbar
+    TWITTER.loadTwitterUsers(socialView.initializeToolbar);
+  });
+
+  if (device.platform != "WinCE") {
+  //  socialView.myScroll = new SCROLLER.GenericScroller('socialView_contentArea');
+  }
+}
+
+socialView.initializeToolbar = function() {
+  // all our twitter streams should be loaded; let's set up our toolbar
+  var users = TWITTER.users;
+
+  // check for a rate limit
+  if (users.error) {
+    // rate limited... things aren't going to work real well from here on out
+    console.log(streams.error);
+    alert("Rate limited. Please try again later.");
+    return;
+  }
+
+  // go through each stream and request the profile image
+  for (var i = 0; i < users.length; i++) {
+    plugins.tabBar.createItem("tab" + i,
+                              users[i].getScreenName(),
+                              "/www/images/tab"+i+".png",
+        {
+        onSelect: function(tabName) {
+            var i = tabName.substr(3,1);
+            socialView.loadStreamFor('@' + users[i].getScreenName());
+        }
+    });
+    
+  }
+}
+
+socialView.loadStreamFor = function(searchPhrase) {
+  socialView.currentTitle = searchPhrase;
+  plugins.navigationBar.setTitle(socialView.currentTitle);
+
+  var aStream = new TWITTER.TwitterStream(searchPhrase, function(theStream) {
+    var theTweetTemplate = $ge("socialView_twitterTemplate").innerHTML;
+    var theContentArea = $ge("socialView_contentArea");
+    var theStreamHTML = "";
+
+    // check for a rate limit
+    if (theStream.error) {
+      // rate limited... things aren't going to work real well from here on out
+      console.log(theStream.error);
+      alert("Rate limited. Please try again later.");
+      return;
+    }
+
+    for (var i = 0; i < theStream.length; i++) {
+      var theTweet = theStream[i];
+      var theTemplate = theTweetTemplate.replace("%INDEX%", i).replace("%PROFILE_IMAGE_URL%", theTweet.profile_image_url || theTweet.user.profile_image_url).replace("%REAL_NAME%", theTweet.from_user || theTweet.user.name).replace("%SCREEN_NAME%", theTweet.from_user || theTweet.user.screen_name).replace("%TWEET%", theTweet.text);
+      theStreamHTML += theTemplate;
+    }
+
+    theContentArea.innerHTML = theStreamHTML;
+
+    socialView.currentStream = theStream;
+    $ge("socialView_scroller").scrollTop = 0;
+
+  }, socialView.numberOfTweets);
+}
+
+socialView.selectTweet = function(theIndex) {
+  var theTweet = socialView.currentStream[theIndex];
+  tweetView.setTweet(theTweet);
+  PKUI.CORE.pushView(tweetView);
+}
+
+socialView.changeReturnCount = function ()
+{
+  var pickerView = window.plugins.pickerView;
+  var slots = [
+      {name: 'count', value: socialView.numberOfTweets, data: [
+          {value: 25, text: __T('Twenty-Five')},
+          {value: 50, text: __T('Fifty')},
+          {value: 75, text: __T('Seventy-Five')},
+          {value:100, text: __T('One Hundred')},
+          {value:125, text: __T('One Hundred Twenty-Five')},
+          {value:150, text: __T('One Hundred Fifty')},
+          {value:175, text: __T('One Hundred Seventy-Five')},
+          {value:200, text: __T('Two Hundred')}
+      ]}
+  ];
+  pickerView.create('Number of Tweets', slots, function(selectedValues, buttonIndex) {
+    if (buttonIndex == 1)
+    {
+      socialView.numberOfTweets = selectedValues["count"];
+      socialView.loadStreamFor(socialView.currentTitle);
+    }
+  },  {style: 'black-opaque', doneButtonLabel: __T('OK'), cancelButtonLabel: __T('Cancel')});
+}
+
+/**
+ *
+ * Called by PKUI.CORE.pushView when we are about to appear.
+ *
+ */
+socialView.viewDidAppear = function() {
+  // set up our navigation bar
+  // it should have the user's stream name in the center,
+  // a "back" button on the left, and a # button on the right.
+  plugins.navigationBar.hideLeftButton();
+  plugins.navigationBar.hideRightButton();
+  plugins.navigationBar.setTitle(socialView.currentTitle);
+  plugins.navigationBar.setupLeftButton( __T("BACK"), null, socialView.backButtonPressed);
+  plugins.navigationBar.setupRightButton(__T("#"), null, socialView.changeReturnCount);
+  plugins.navigationBar.showLeftButton();
+  plugins.navigationBar.showRightButton();
+  
+  // set up our tab bar
+  plugins.tabBar.show();
+  plugins.tabBar.showItems("tab0","tab1","tab2","tab3","tab4");
+  
+  // catch any back buttons
+  document.addEventListener("backbutton", socialView.backButtonPressed, false);
+
+  if (socialView.firstTime) {
+    socialView.loadStreamFor("@photokandy"); // load our first stream automatically.
+    socialView.firstTime = false;
+  }
+}
+
+/**
+ *
+ * Called by PKUI.CORE when we are about to be hidden
+ *
+ */
+socialView.viewWillHide = function() {
+  // clean up our navigation bar -- get rid of any displayed buttons
+  plugins.navigationBar.hideLeftButton();
+  plugins.navigationBar.hideRightButton();
+  plugins.navigationBar.setTitle("");
+  plugins.tabBar.hide();
+  // clean up the back button
+  document.removeEventListener("backbutton", socialView.backButtonPressed, false);
+}
+
+/**
+ *
+ * Handle Android's Back Button
+ *
+ */
+socialView.backButtonPressed = function() {
+  PKUI.CORE.popView();
+}
+
+  
+</script>

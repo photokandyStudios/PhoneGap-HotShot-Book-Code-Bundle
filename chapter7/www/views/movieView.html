@@ -1,0 +1,127 @@
+<div class="viewBackground">
+  <div class="navigationBar">
+    <div style="padding-top:7px" id="movieView_title"></div>
+    <button class="backButton barButton" id="movieView_backButton" style="left:10px" ></button>
+  </div>
+  <div class="content avoidNavigationBar avoidToolBar" style="background-image: none; background-color: #000; padding:0; overflow: scroll;" id="movieView_scroller">
+    <div id="movieView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+  </div>
+  <div class="toolBar">
+    <span class="icon" id="movieView_deleteButton"><img src="./images/trash_64.png" width=32 height=32 /></span>
+    <span class="icon" id="movieView_shareButton"><img src="./images/man_64.png" width=32 height=32 /></span>
+  </div>
+</div>
+
+<div id="movieView_documentTemplate" class="hidden">
+ <video src="%SRC%" controls autoplay autobuffer style="width:100%; height: 100%;" />
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var movieView = $ge("movieView") || {};
+  movieView.moviePath = "";
+  movieView.movieIndex = -1;
+  
+  movieView.setMovie = function ( moviePath, movieIndex )
+  {
+    movieView.moviePath = moviePath;
+    movieView.movieIndex = movieIndex;
+    
+    $ge("movieView_contentArea").innerHTML =
+      PKUTIL.instanceOfTemplate($ge("movieView_documentTemplate"),
+        { "src" : movieView.moviePath,
+          "thumb": PKUTIL.FILE.getPathPart ( moviePath ) +
+                   PKUTIL.FILE.getFileNamePart ( moviePath ) + ".jpg"        });
+  }
+  
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  movieView.initializeView = function()
+  {
+    movieView.viewTitle = $ge("movieView_title");
+    movieView.viewTitle.innerHTML = __T("APP_TITLE_IMG");
+
+    movieView.backButton = $ge("movieView_backButton");
+    movieView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(movieView.backButton, "touchend",
+      function(e)
+      {
+        PKUI.CORE.popView();
+      }
+    );
+    
+    movieView.deleteButton = $ge("movieView_deleteButton");
+    PKUI.CORE.addTouchListener(movieView.deleteButton, "touchend",
+      function(e)
+      {
+        movieView.confirmDeletePictures();
+      }
+    );
+    
+    movieView.shareButton = $ge("movieView_shareButton");
+    //CHALLENGE: Implement sharing.
+
+    if (device.platform != "WinCE")
+    {
+      movieView.myScroll = new SCROLLER.GenericScroller('movieView_contentArea');
+    }
+  }
+  
+  movieView.confirmDeletePictures = function ()
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Delete Image"), __T("This will delete the selected video. This action is unrecoverable."), __T("Don't Delete<|Delete*"), function(i)
+    {
+      if (i == 1)
+      {
+        PKUTIL.delay ( 100, movieView.deleteSelectedPicture );
+      }
+    });
+    anAlert.show();
+  }
+  
+  movieView.deleteSelectedPicture = function ()
+  {
+    PKFILE.removeFile ( movieView.moviePath,
+                        function ()
+                        {
+                          console.log ("3");
+                          PKUTIL.delay(100, function() { PKUI.CORE.popView(); } );// our video is gone, pop us...
+                          console.log ("2");
+                          documentsView.reloadAvailableDocuments();
+                          
+                        },
+                        function (e)
+                        {
+                          var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"), __T("Failed to remove file."));
+                          anAlert.show();
+                          documentsView.reloadAvailableDocuments();
+                        }
+                      );
+  }
+
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  movieView.viewWillAppear = function ()
+  {
+  }
+  movieView.viewWillHide = function ()
+  {
+  }
+  movieView.viewDidHide = function ()
+  {
+    $ge("movieView_contentArea").innerHTML = "";
+  }
+  movieView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+  
+</script>

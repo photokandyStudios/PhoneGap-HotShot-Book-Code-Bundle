@@ -1,0 +1,129 @@
+#!/bin/bash
+###########################################################################
+#
+# Creates a phonegap 2x project, according to the style used in
+# PhoneGap HotShot. (Note: this is /not/ the same format as is created
+# using the cordova-cli introduced in phonegap 2.4.)
+#
+# Author: Kerri Shotts
+# Version: 1.0
+# License: MIT
+#
+###########################################################################
+
+if [ $# -lt 4 ]; then
+    echo "Usage: $0 rootDirectory domain appName platform...";
+    echo
+    echo "Creates a PhoneGap 2.x project, according to the style used in"
+    echo "PhoneGap HotShot published by Packt. This format provides for"
+    echo "easy cross-platform development by linking the 'www' folder"
+    echo "into each project."
+    echo
+    echo "The directory structure created will be as follows:"
+    echo
+    echo "    /rootDirectory"
+    echo "      /www - Your application's web artifacts"
+    echo "        /cordova - Platform-specific cordova.js files"
+    echo "      /platform - Your application's platform-specific project."
+    echo
+    echo "rootDirectory     The project's root directory. Platform-"
+    echo "                  specific projects will be creatd underneath."
+    echo
+    echo "domain            A reverse domain, such as 'com.domain'. The"
+    echo "                  application's name will be added to the end"
+    echo "                  automatically for project-creation purposes."
+    echo
+    echo "appName           The name of the app."
+    echo
+    echo "platform...       A list of platforms from the following"
+    echo "                  platforms:"
+    echo "                      iOS - iPad, iPhone, etc."
+    echo "                      Android - Android platform."
+    echo
+    echo "NOTE: This directory structure is not compatible with the new"
+    echo "layout brought with the cordova-cli project introduced in PG2.4."
+    echo
+    echo "NOTE: The phonegap installation is derived from the environment"
+    echo "variable PHONEGAP_HOME. If this variable is not set, it is derived"
+    echo "from ~/.phonegap. If it still can not be located, it is asked of"
+    echo "the user."
+    echo
+    echo "NOTE: Make sure that the Android SDK tools are in your path if you"
+    echo "plan on creating an Android project."
+    echo
+    exit;
+fi
+
+# Get the path to the PhoneGap installation
+# let's see if it is defined in the environment first
+PGPATH=$PHONEGAP_HOME;
+
+if [ "$PGPATH" = "" ]; then
+    # not defined; let's see if we've got a ~/.phonegap
+    PGPATH="`cat ~/.phonegap`"
+    if [ "$PGPATH" = "" ]; then
+        # still not defined... we need the user's help
+        echo
+        echo "Please enter PhoneGap directory: "
+        read PGPATH
+    fi
+fi
+
+if [ -f "${PGPATH}/VERSION" ]; then
+    # the VERSION file exists
+    echo "NOTICE: Using PhoneGap version `cat ${PGPATH}/VERSION` in ${PGPATH}";
+    VERSION=`cat ${PGPATH}/VERSION`;
+else
+    echo "ERROR: No VERSION file in ${PGPATH}; are you sure you've got";
+    echo "a valid PhoneGap directory?"
+    exit 9;
+fi
+
+ROOTDIR=$1
+DOMAIN=$2
+APPNAME=$3
+
+shift 3
+
+echo "... creating ${ROOTDIR}/www/cordova folder"
+mkdir -p "${ROOTDIR}/www/cordova"
+
+PLATFORMS="$@";
+for PLATFORM in $PLATFORMS; do
+    if [ ! \( "${PLATFORM}" = "Android" -o "${PLATFORM}" = "iOS" \) ]; then
+        echo "... Platform ${PLATFORM} is not recognized.";
+    fi;
+done;
+
+for PLATFORM in $PLATFORMS; do
+    echo "... creating a project for ${PLATFORM}"
+
+    # create a project for each platform
+    mkdir "${ROOTDIR}/${PLATFORM}"
+    if [ "${PLATFORM}" = "Android" ]; then
+        echo  "${PGPATH}/lib/${PLATFORM}/bin/create" "${ROOTDIR}/${PLATFORM}/${APPNAME}" "${DOMAIN}.${APPNAME}" "${APPNAME}"
+        "${PGPATH}/lib/${PLATFORM}/bin/create" "${ROOTDIR}/${PLATFORM}/${APPNAME}" "${DOMAIN}.${APPNAME}" "${APPNAME}"
+        mv "${ROOTDIR}/${PLATFORM}/${APPNAME}/assets/www" "${ROOTDIR}/${PLATFORM}/${APPNAME}/assets/wwwold"
+        cd "${ROOTDIR}/${PLATFORM}/${APPNAME}/assets"
+        ln -s ../../../www
+        cd $OLDPWD
+    else
+        echo "${PGPATH}/lib/${PLATFORM}/bin/create" "${ROOTDIR}/${PLATFORM}" "${DOMAIN}.${APPNAME}" "${APPNAME}"
+        "${PGPATH}/lib/${PLATFORM}/bin/create" "${ROOTDIR}/${PLATFORM}" "${DOMAIN}.${APPNAME}" "${APPNAME}"
+        mv "${ROOTDIR}/${PLATFORM}/www" "${ROOTDIR}/${PLATFORM}/wwwold"
+        cd "${ROOTDIR}/${PLATFORM}"
+        ln -s ../www
+        cd $OLDPWD
+    fi
+
+    LC_PLATFORM=`echo "$PLATFORM" | tr '[A-Z]' '[a-z]'`
+
+    echo "... ... copying cordova.js to main www"
+    # now that the project is created, get the cordova.js file out
+    find "${ROOTDIR}/${PLATFORM}" -name "cordova-${VERSION}.js" -print -exec cp "{}" "${ROOTDIR}/www/cordova/cordova-${VERSION}-${LC_PLATFORM}.js" \;
+
+done;
+
+echo "... Project creation complete. Consider removing wwwold dirs."
+
+

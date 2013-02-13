@@ -1,0 +1,122 @@
+.wince #rootContainer {
+	background-color: #000;
+}
+
+.navigationBar {
+	background-image: url(../images/NavigationBar.png);
+	color: #FFF;
+	background-color: transparent;
+	z-index: 1;
+	box-shadow: 0px 3px 10px #000;
+}
+
+.android .navigationBar {
+	background-image: none;
+	background-color: #333;
+	color: #FFF;
+	text-align: left;
+}
+
+.wince .navigationBar {
+	background-image: none;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	border-radius: 0px;
+}
+
+.content {
+	background-color: #000;
+	color: #CCC;
+}
+
+.ios .content {
+	background-image: url(../images/Background.png);
+	background-repeat: repeat;
+	background-size: 50% 50%;
+}
+
+.wince .content {
+	background-image: none !important;
+	background-color: transparent !important;
+	color: #FFF;
+}
+
+.viewBackground {
+	background-color: #000;
+}
+
+.wince .viewBackground {
+	background-image: none !important;
+	border-radius: 0px;
+}
+
+.ios .navigationBar .barButton {
+	background-color: transparent;
+}
+
+.wince .navigationBar .barButton {
+	top: 20px;
+}
+
+.documentTapArea {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.documentContainer {
+	height: 64px;
+	line-height: 65px;
+	display: block;
+	border-bottom: 1px solid #888;
+	background-color: #FFF;
+	color: #333;
+}
+
+.documentTitle {
+	left: 51px;
+	width: auto;
+	position: absolute;
+	font-weight: bold;
+}
+
+.documentImage {
+	top: 0px;
+	left: 0px;
+	width: auto;
+	height: auto;
+	position: absolute;
+}
+
+.documentImage img {
+	width: 32px;
+	height: 32px;
+	margin-left: 10px;
+	margin-top: 18px;
+	margin-right: 10px;
+}
+
+.documentActions {
+	display: none;
+	opacity: 0;
+	position: absolute;
+	right: 10px;
+	top: -12px;
+	width: 6em;
+	-webkit-transition: opacity 0.4s ease-in-out;
+	text-align: right;
+}
+.documentActions .barButton {
+	position: relative;
+}
+
+.ios #mapView_title {
+	left: 73px;
+	right: 73px;
+}
+
+#mapView_mapCanvas div {
+	height: auto;
+}

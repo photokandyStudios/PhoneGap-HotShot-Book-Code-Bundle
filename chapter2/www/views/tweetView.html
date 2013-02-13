@@ -1,0 +1,199 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Tweet" view for Socializer                         # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="tweetView_title"></div>
+  <button class="barButton backButton" id="tweetView_backButton" style="left:10px" ></button>
+ </div>
+ <div class="content avoidNavigationBar avoidToolBar" style="padding:0; overflow:scroll; " id="tweetView_scroller">
+   <div id="tweetView_contentArea" style="padding: 0; height: auto; position: relative;">
+   </div>
+ </div>
+ <div class="toolBar" id="tweetView_toolbar" style="text-align: center">
+  <button class="barButton" id="tweetView_shareButton" style="position: relative; margin-right:10px; float: right;" ></button>
+ </div>
+</div>
+
+<div class="hidden" id="tweetView_tweetTemplate">
+ <div class="twitterItem" onclick="tweetView.selectTweet(%INDEX%);">
+  <img src="%PROFILE_IMAGE_URL%" width=64 height=64 border=0 />
+  <div class="twitterRealName">%REAL_NAME%</div>
+  <div class="twitterScreenName">@%SCREEN_NAME%</div>
+  <div class="twitterTweet">%TWEET%</div>
+  <div class="twitterEntities">%ENTITIES%</div>
+ </div>
+</div>
+
+<div class="hidden" id="tweetView_entityTemplate">
+  <DIV class="entity %TYPE%">%ENTITY%</DIV>
+</div>
+
+<div class="hidden" id="tweetView_urlEntityTemplate">
+ <a href="javascript:PKUTIL.showURL('%URL%');" class="openInNewWindow url" target="_blank">%DISPLAYURL%</a>
+</div>
+
+<div class="hidden" id="tweetView_hashEntityTemplate">
+ <a href="javascript:socialView.loadStreamFor('%23%HASHTAG%'); PKUI.CORE.popView();" class="hash">#%TEXT%</a>
+</div>
+
+<div class="hidden" id="tweetView_userEntityTemplate">
+ <a href="javascript:socialView.loadStreamFor('@%USER%'); PKUI.CORE.popView();" class="user" >@%TEXT%</a>
+</div>
+
+
+<script>
+
+  var tweetView = $ge("tweetView") || {};
+  
+  tweetView.theTweet = {};
+  
+  tweetView.setTweet = function ( aTweet )
+  {
+      tweetView.theTweet = aTweet;
+  }
+
+  /**
+  *
+  * Initializes the view.
+  *
+  */
+  tweetView.initializeView = function ()
+  {
+    tweetView.viewTitle = $ge("tweetView_title");
+    tweetView.viewTitle.innerHTML = __T("APP_TITLE");
+
+    tweetView.backButton = $ge("tweetView_backButton");
+    tweetView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(tweetView.backButton, "touchend", function () { PKUI.CORE.popView(); });
+
+    tweetView.replyButton = $ge("tweetView_shareButton");
+    tweetView.replyButton.innerHTML = __T("SHARE");
+    PKUI.CORE.addTouchListener(tweetView.replyButton, "touchend", function () { tweetView.share(); });
+
+    if (device.platform != "WinCE")
+    {
+        tweetView.myScroll = new SCROLLER.GenericScroller('tweetView_contentArea');
+    }    
+  }
+  
+  
+  tweetView.loadTweet = function ()
+  {
+    var theTweet = tweetView.theTweet;
+    
+    var theTweetTemplate = $ge("tweetView_tweetTemplate").innerHTML;
+    var theEntityTemplate = $ge("tweetView_entityTemplate").innerHTML;
+    var theURLEntityTemplate = $ge("tweetView_urlEntityTemplate").innerHTML;
+    var theHashEntityTemplate = $ge("tweetView_hashEntityTemplate").innerHTML;
+    var theUserEntityTemplate = $ge("tweetView_userEntityTemplate").innerHTML;
+    
+    var theContentArea = $ge("tweetView_contentArea");
+    var theTweetHTML = "";
+    var theEntitiesHTML = "";
+    
+    // handle URL entities first
+    var theURLEntities = theTweet.entities.urls;
+    for (var i=0;i<theURLEntities.length;i++)
+    {
+        var theURLEntity = theURLEntities[i];
+        theEntitiesHTML += theEntityTemplate.replace ("%TYPE%", "url")
+                                            .replace ("%ENTITY%",
+                                theURLEntityTemplate.replace ("%URL%", theURLEntity.url )
+                                                    .replace ("%DISPLAYURL%", theURLEntity.display_url )
+                           );
+    }
+
+    // next, hash tags entities
+    var theHashEntities = theTweet.entities.hashtags;
+    for (var i=0;i<theHashEntities.length;i++)
+    {
+        var theHashEntity = theHashEntities[i];
+        theEntitiesHTML += theEntityTemplate.replace ("%TYPE%", "hash")
+                                            .replace ("%ENTITY%",
+                                theHashEntityTemplate.replace ("%HASHTAG%", theHashEntity.text )
+                                                     .replace ("%TEXT%",    theHashEntity.text )
+                           );
+    }
+
+    // next, user tags entities
+    var theUserEntities = theTweet.entities.user_mentions;
+    for (var i=0;i<theUserEntities.length;i++)
+    {
+        var theUserEntity = theUserEntities[i];
+        theEntitiesHTML += theEntityTemplate.replace ("%TYPE%", "user")
+                                            .replace ("%ENTITY%",
+                                theUserEntityTemplate.replace ("%USER%", theUserEntity.screen_name )
+                                                     .replace ("%TEXT%", theUserEntity.name )
+                           );
+    }
+        
+    var theTemplate = theTweetTemplate
+                      .replace ("%PROFILE_IMAGE_URL%", theTweet.profile_image_url || theTweet.user.profile_image_url)
+                      .replace ("%REAL_NAME%", theTweet.from_user || theTweet.user.name)
+                      .replace ("%SCREEN_NAME%", theTweet.from_user || theTweet.user.screen_name)
+                      .replace ("%TWEET%", theTweet.text)
+                      .replace ("%ENTITIES%", theEntitiesHTML );
+
+    theTweetHTML += theTemplate;
+        
+    theContentArea.innerHTML = theTweetHTML;
+        
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  */
+  tweetView.viewWillAppear = function ()
+  {
+    
+    tweetView.loadTweet(); // display our tweet
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  tweetView.viewWillHide = function ()
+  {
+  }
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  tweetView.backButtonPressed = function ()
+  {
+  PKUI.CORE.popView();
+  }
+  
+  tweetView.share = function ()
+  {
+    switch (device.platform)
+    {
+case "Android": window.plugins.share.show(
+					{ subject: 'Share',
+					  text: tweetView.theTweet.text,
+					},
+					function() {},
+					function() { alert ('Error sharing.'); }
+			 	);
+                break;
+case "WinCE":
+                navigator.plugins.pgSocialShare.shareStatus (tweetView.theTweet.text);
+                break;
+default:
+                window.plugins.shareKit.share ( tweetView.theTweet.text );
+    }
+  }
+  
+
+  
+</script>

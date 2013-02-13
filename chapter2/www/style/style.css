@@ -1,0 +1,208 @@
+.wince #rootContainer
+{
+  background-color: #000;
+}
+
+.viewBackground
+{
+  border-radius: 10px;
+}
+
+.navigationBar
+{
+  background-image: url(../images/NavigationBar.png);
+  color: #FFF;
+  background-color: transparent;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  z-index:1;
+  box-shadow: 0px 3px 10px #888;
+}
+
+.wince .navigationBar
+{
+  background-image: none;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0px;
+}
+
+.toolBar
+{
+  background-color: #628799;
+}
+
+.wince .toolBar
+{
+  background-image: none;
+  background-color: #478 !important;
+}
+
+.content
+{
+  background-image: url(../images/Background.png);
+  background-repeat: repeat;
+  background-size: 50% 50%;
+  color: #333;
+}
+
+.wince .content
+{
+  background-image: none !important;
+  background-color: transparent !important;
+  color: #FFF;
+}
+
+
+.viewBackground
+{
+  background-color: #000;
+}
+
+.wince .viewBackground
+{
+  background-image: none !important;
+  background-color: #134;
+  border-radius: 0px;
+}
+
+.navigationBar .barButton
+{
+  background-color: transparent;
+}
+.wince .navigationBar .barButton
+{
+  top: 20px;
+}
+
+.toolBar .profileImage
+{
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  line-height: 44px;
+  margin-left:10px;
+  margin-right:10px;
+  background-size: 32px 32px;
+  background-repeat: no-repeat;
+  margin-top: 6px;
+}
+
+.twitterItem
+{
+ height: auto;
+ padding:10px;
+ padding-bottom: 20px;
+ background-image: -webkit-linear-gradient(top, rgba(255,255,255,0.5), rgba(0,0,0,0.25) );
+ background-repeat: repeat-y;
+ border-bottom: 1px solid #000;
+}
+
+.wince .twitterItem
+{
+   color: #FFF;
+   border-bottom: 1px solid #CCC;
+}
+
+.twitterItem img
+{
+ float: left;
+ margin-right:10px;
+ margin-bottom: 10px;
+}
+
+.twitterName
+{
+ height: 32px;
+ line-height: 32px;
+}
+.twitterRealName
+{
+ font-weight: bold;
+}
+
+.twitterScreenName
+{
+ color: #888;
+}
+
+.wince .twitterScreenName
+{
+ color: #8CC;
+}
+
+.twitterTweet
+{
+ margin-top:10px;
+ height: auto;
+}
+
+.twitterEntities .entity
+{
+ height:auto; 
+ position: relative;
+ margin-top:10px;
+ border-radius: 10px;
+ border: 1px solid #888;
+ background-color: rgba(255,255,255,.25);
+ padding:10px;
+}
+
+.wince .twitterEntities .entity
+{
+ border: 2px solid #FFF;
+ background-color: #000;
+ border-radius: 0px !important;
+}
+
+.twitterEntities A, .twitterEntities A:visited, .twitterEntities A:link, .twitterEntities A:hover
+{
+ text-decoration: none;
+}
+
+.twitterEntities A.touched
+{
+ text-decoration: underline;
+ text-shadow: 0px 0px 10px #FFF;
+}
+
+.twitterEntities .entity.hash, .twitterEntities .entity.user
+{
+ display: inline-block;
+ margin-right:10px;
+}
+
+.twitterEntities .entity.hash A
+{
+ color: #800 !important;
+}
+
+.wince .twitterEntities .entity.hash A
+{
+ color: #F88 !important;
+}
+
+.twitterEntities .entity.user A
+{
+ color: #080 !important;
+}
+.wince .twitterEntities .entity.user A
+{
+ color: #8F8 !important;
+}
+
+.twitterEntities .entity.url
+{
+ display: block;
+}
+
+.twitterEntities .entity.url A
+{
+ color: #008 !important;
+ display: block;
+}
+
+.wince .twitterEntities .entity.url A
+{
+ color: #88F !important;
+}

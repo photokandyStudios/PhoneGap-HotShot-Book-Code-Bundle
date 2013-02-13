@@ -1,0 +1,518 @@
+<div class="viewBackground">
+    <div id="gameView_contentArea" style="padding: 0; height: auto; position: relative;">
+     <div id="gameView_overlay">
+      <div id="gameView_left">&lt;</div>
+      <div id="gameView_right">&gt;</div>
+      <div id="gameView_msg">Tap to start!</div>
+      <div id="gameView_nextButton" onclick="startLevel();">Next</div>
+      <div id="gameView_backButton" onclick="PKUI.CORE.popView();">Back</div>
+     </div>
+     <canvas id="gameView_canvas"></canvas>
+    </div>
+</div>
+<script>
+/*****************************************************************************
+ *
+ * Cave Racer
+ *
+ * Version 1.0
+ *
+ * A ship is racing through caves that, for some inexplicable reason, have
+ * walls every few meters that have openings. If the ship impacts the cave wall
+ * or the wall, the game is over.
+ *
+ *****************************************************************************/
+
+//
+// Width/Height of our target canvas. We need to keep both numbers less than
+// 1024x768 in order to keep the canvas within one GPU tile (if we go over
+// that, performance is dramatically reduced).  
+/////////////////////////////////////////////////////////////////////////////
+var cWidth=screen.width;
+var cHeight=screen.height;
+var cMiddle=screen.width/2;
+if (device.platform=="Android")
+{
+  // the window.devicePixelRatio screws us over; handle it.
+  cWidth = cWidth / window.devicePixelRatio;
+  cHeight = cHeight / window.devicePixelRatio;
+  cMiddle = cMiddle / window.devicePixelRatio;
+}
+
+//
+// points contains all the coordinates for the current level. These include
+// the side cavern walls, and any obstacles to the ship.
+/////////////////////////////////////////////////////////////////////////////
+var points = new Array();
+
+//
+// currentTop indicates the current position within the cave
+var currentTop;
+var currentLevel = 0;
+var timer = -1;
+
+// this determines how long each individual cave segment is
+var pieceWidth = 40;    
+
+//
+var shipPositionX = (cWidth/2) - 10;
+var shipPositionY = 30;
+var shipAcceleration = 0;
+var buttonDown = 0;
+var lastTouchX = -1;
+var amTouching = false;
+var touchTimer = -1;
+var controlMethod = 0; // slide. 1=tilt.
+var amCalibrated = false;
+var tiltWatch = -1;
+var previousAccelerometer = { x:0, y:0, z:0 };
+var calibratedAccelerometer = { x:0, y:0, z:0 };
+var deviceFactor = 1.25;
+
+// cache the canvas information and set the size
+var c = $ge("gameView_canvas");
+var ctx = c.getContext("2d");
+
+c.setAttribute ("width", cWidth * window.devicePixelRatio);
+c.setAttribute ("height",cHeight * window.devicePixelRatio);
+//c.setAttribute ("left", (screen.width/2) - (cWidth/2));
+c.style.width = ""+cWidth+"px"; 
+c.style.height = ""+cHeight+"px";
+
+function generateLevel ( lvl )
+{
+    // reset the existing level points
+    points = new Array();
+    points[0] = new Array(); // left side of corridor
+    points[1] = new Array(); // right side of corridor
+    points[2] = new Array(); // left, open side of wall, -1 = no wall
+    points[3] = new Array(); // right, open side of wall, -1 = no wall
+
+    // reset the top and ship position too
+    currentTop = -( cHeight );
+    shipPositionX = (cWidth/2) - 10;
+    shipPositionY = ( cHeight / 5 ) + (lvl*5);
+    
+    // start the cavern out reasonably wide
+    var lastLeft= (cWidth/5) ;
+    var lastRight=(cWidth/5) ;
+    var bias = 0;
+    
+    // rndWidth determines how much the cavern walls can vary
+    // by any step
+    var rndWidth = Math.floor(cWidth/ 10) + (lvl*10);
+    
+    // channelWidth keeps the cave channel from getting so thin
+    // the ship can't navigate
+    var channelWidth = Math.floor(cWidth / 2.25) - (lvl*16);
+    
+    // how often can a wall happen?
+    var wallChance = 0.75 - (lvl/25);
+    if (wallChance < 0.15) { wallChance = 0.15; };
+    
+    var wallEvery = Math.floor(30 - (lvl/2));
+    if (wallEvery < 10) { wallEvery = 10; };
+
+    for (var i=0; i< Math.floor(300 + ( 125 * (lvl/2) ) ); i++)
+    { 
+        var newLeft = lastLeft + ( bias * (7+lvl) ) + ( (rndWidth/2) - Math.floor( Math.random()* (rndWidth+1) ) );
+        var newRight = lastRight + ( bias * (7+lvl) )  + ( (rndWidth/2) - Math.floor( Math.random()* (rndWidth+1) ) );
+
+        if ( newLeft < 10 ) { newLeft = 10; bias = 1; }
+        if ( newLeft > (cWidth/1.5) ) { newLeft = cWidth/1.5; bias = -1; }
+        if ( cWidth - newRight < newLeft + channelWidth )
+        {
+            newRight = cWidth - ( newLeft + (channelWidth) );
+        }
+        if ( cWidth - newRight > newLeft + (channelWidth*1.5))
+        {
+            newRight = newRight + (Math.random() * rndWidth);
+        }
+        if ( newRight < 10 ) { newRight = 10; }
+        if ( newRight > (cWidth-10)) { newRight = cWidth-10; }
+  
+        points[0].push ( newLeft );
+        points[1].push ( newRight );
+  
+        lastLeft = newLeft;
+        lastRight = newRight;
+        
+        if ( (i % wallEvery) == 0 && ( i > 30 ) )
+        {
+            // decide if we want to create a wall
+            if (Math.random()>wallChance)
+            {
+                var openingWidth = channelWidth/1.35;
+                var caveWidth = ((cWidth-newRight) - newLeft) - openingWidth;
+                var wallOpening = Math.floor ( Math.random() * caveWidth );
+                points[2].push ( newLeft + wallOpening );
+                points[3].push ( newLeft + wallOpening + openingWidth );
+            }
+            else   
+            {   // no wall
+                points[2].push ( -1 );
+                points[3].push ( -1 );    
+            }
+        }
+        else   
+        {   // no wall
+            points[2].push ( -1 );
+            points[3].push ( -1 );    
+        }
+    }
+}
+
+
+var logArray = [];
+function log ( s )
+{
+    if (logArray.length>10) { logArray.shift(); };
+    logArray.push (s);
+    
+    ctx.save();
+    //ctx.scale (window.devicePixelRatio, window.devicePixelRatio);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "12pt Helvetica";
+    for (var i=0; i<logArray.length; i++)
+    {
+      ctx.fillText ( logArray[i], 10, 30 + (i*20) );
+    }
+    ctx.restore();
+}
+
+function leftButtonDown()
+{
+    buttonDown = -1;
+}
+
+function leftButtonUp()
+{
+    buttonDown = 0;
+}
+
+function rightButtonDown ()
+{
+    buttonDown = 1;
+}
+
+function rightButtonUp ()
+{
+    buttonDown = 0;
+}
+
+function canvasTouchStart (evt)
+{
+  //console.log ("1");
+  lastTouchX = evt.touches[0].pageX;
+  amTouching = true;
+}
+
+function canvasTouchMove (evt)
+{
+  if (touchTimer>-1) { clearTimeout(touchTimer); touchTimer = -1; }
+  var curTouchX = evt.touches[0].pageX;
+  var deltaX = curTouchX-lastTouchX;
+  if (Math.abs(deltaX)> 1)
+  {
+      buttonDown = ( (deltaX) / Math.abs(deltaX) ) / ( 8/Math.min(Math.abs(deltaX),8));
+      lastTouchX = curTouchX;
+  }
+  else
+  {
+      buttonDown = 0;
+  }
+  // if player stays in same spot, clear the button...
+  touchTimer = setTimeout ( function() { buttonDown = 0; }, 25 );
+}
+
+function canvasTouchEnd (evt)
+{
+  buttonDown = 0;
+  amTouching = false;
+}
+
+function updateAccelerometer ( a )
+{
+  if (amCalibrated)
+  {
+    var p = previousAccelerometer;
+    var avgX = (p.x * 0.7) + (a.x * 0.3);
+
+    previousAccelerometer = a;
+    previousAccelerometer.x = avgX;
+  }
+  else
+  {
+    calibratedAccelerometer = a;
+    previousAccelerometer = a;
+    amCalibrated = true;
+  }
+}
+
+function accelerometerError ( )
+{
+  console.log ("Error from accelerometer...");
+}
+
+function showMessage ( m )
+{
+  var newStyle = "block";
+  if (m=="") { newStyle = "none"; }
+
+  $ge("gameView_msg").style.display = newStyle;
+  $ge("gameView_backButton").style.display = newStyle;
+  $ge("gameView_nextButton").style.display = newStyle;
+
+  $ge("gameView_msg").innerHTML = m;
+}
+
+function doUpdate ( f )
+{
+    var gameOver = false;
+    var levelOver = false;
+    // check to see if the ship has impacted something
+    // pixel-based collision
+    var pixels = ctx.getImageData(Math.floor(shipPositionX * window.devicePixelRatio), 
+                                  Math.floor(shipPositionY * window.devicePixelRatio),
+                                  1,1).data;
+    if ( pixels[0] != 0 )
+    {
+        $ge("gameView_nextButton").innerHTML = __T("START_OVER");
+        showMessage (__T('CRASHED'));
+        gameOver = true;
+        currentLevel = 0;
+    }
+
+    if (f > 0 && f != Infinity)
+    {
+        // move the ship
+        if (controlMethod == 0)
+        {
+            if (buttonDown != 0)
+            {
+                if (Math.abs(shipAcceleration)<1)
+                { shipAcceleration = buttonDown; } 
+                shipAcceleration = Math.min ( 10, shipAcceleration + ( buttonDown * deviceFactor) );
+                //shipAcceleration = buttonDown * 3;
+            }
+            else  
+            {
+                shipAcceleration = shipAcceleration / 1.5;       
+                if (Math.abs(shipAcceleration)<0.25)
+                { shipAcceleration = 0; }
+            }
+            shipPositionX += (shipAcceleration*f);
+        }
+        else
+        {
+            // calculate the position based on the acceleromter data
+            if (amCalibrated)
+            {
+                shipPositionX = cMiddle - (previousAccelerometer.x * 32);
+                if ( shipPositionX < 0 )
+                {
+                    shipPositionX = 0;
+                }
+                if ( shipPositionX > (window.innerWidth))
+                {
+                    shipPositionX = window.innerWidth;
+                }
+            }
+        }
+        
+        var speed = ((4+currentLevel) * (f));
+        currentTop+= speed;
+    }
+    if ( Math.floor (currentTop/pieceWidth) > points[0].length )
+    {
+        $ge("gameView_nextButton").innerHTML = __T("CONTINUE");
+        showMessage (__T('NEXT_LEVEL'));
+        levelOver = true;
+    }
+    if (!gameOver && !levelOver)
+    {
+        timer = setTimeout ( doAnim,17);
+    }
+}
+
+var startTime;
+
+function doAnim(timestamp)
+{ 
+    //calculate difference since last repaint
+    if (!timestamp) { timestamp = (new Date()).getTime(); }
+    var diff = timestamp - startTime;
+
+    ctx.save();
+    ctx.scale (window.devicePixelRatio, window.devicePixelRatio);
+    ctx.fillStyle = "#802010";
+    ctx.strokeStyle = "#A04020";
+    ctx.clearRect ( 0, 0, cWidth, cHeight);
+
+    for (var i=0; i<2; i++)
+    {
+        var pts;
+        var cLeft = -10;
+        if (i==0) { pts = points[0]; }
+        if (i==1) { pts = points[1]; cLeft = cWidth+10; }
+
+        ctx.beginPath(); 
+        ctx.moveTo ( cLeft, -pieceWidth );
+        for (var j = Math.floor ( currentTop  / pieceWidth )-1; 
+                 j < Math.floor ( currentTop / pieceWidth ) + ( (cHeight+(2*pieceWidth)) / pieceWidth );
+                 j++)
+        {
+            var p = pts[j];
+            var y = (j * pieceWidth) - currentTop;
+            if (i==1) { p = cWidth - p; }
+            ctx.lineTo ( p, y );
+            
+            // do we need to draw a wall?
+            if ( points[2][j] > -1 )
+            {
+                ctx.lineTo ( points[i+2][j], y );
+                ctx.lineTo ( points[i+2][j], y+pieceWidth );
+            }
+        }
+        ctx.lineTo ( cLeft, ((cWidth+2)*pieceWidth) );
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // draw ship
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.moveTo ( shipPositionX-10, shipPositionY-5 );
+    ctx.lineTo ( shipPositionX+10, shipPositionY-5 );
+    ctx.lineTo ( shipPositionX   , shipPositionY+25 );
+    ctx.lineTo ( shipPositionX-10, shipPositionY-5 );
+    ctx.closePath();
+    ctx.stroke();
+    
+    // text it up!
+    ctx.fillStyle = "#FFFF00";
+    ctx.font = "16px Helvetica";
+    ctx.fillText ( "Level: " + currentLevel, 10, 30 );
+    ctx.fillText ( "Distance: " + Math.floor((currentTop / (points[0].length*pieceWidth))*100) + "%", 10, 48 );
+  
+    // if we have any touch events, show the indication
+    if (amTouching)
+    {
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.beginPath();
+      ctx.arc ( lastTouchX, 400, 50, 0, 2*Math.PI, false );
+      ctx.closePath();
+      ctx.fill();
+    }
+    
+    ctx.restore();
+    
+    doUpdate ( 60/(1000/diff) );
+
+    startTime = timestamp;
+}
+
+function startLevel()
+{
+    showMessage("");
+    shipAcceleration=0;
+    buttonDown=0;
+    currentLevel++;
+    touchTimer = -1;
+    lastTouchX = -1;
+    amTouching = false;
+    previousAccelerometer = { x:0, y:0, z:0 };
+    amCalibrated = false;
+    generateLevel(currentLevel);
+    startTime = (new Date()).getTime();
+    doAnim(startTime+0);
+}
+
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var gameView = $ge("gameView") || {};
+  
+  gameView.initializeView = function()
+  {
+    gameView.setup();
+  }
+  
+  gameView.viewWillAppear = function ()
+  {
+    document.addEventListener("backbutton", gameView.backButtonPressed, false );
+    gameView.reset();
+  }
+  gameView.viewWillHide = function ()
+  {
+    gameView.stop();
+    document.removeEventListener("backbutton", gameView.backButtonPressed, false );
+  }
+  gameView.viewDidHide = function ()
+  {
+  }
+  gameView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+  
+  gameView.setup = function ()
+  {
+    $ge("gameView_msg").addEventListener ("touchend", startLevel);
+    $ge("gameView_backButton").innerHTML = __T("BACK");
+    
+    $ge("gameView_left").addEventListener ( "touchstart", leftButtonDown  );
+    $ge("gameView_left").addEventListener ( "touchend"  , leftButtonUp    );
+    $ge("gameView_right").addEventListener ( "touchstart", rightButtonDown );
+    $ge("gameView_right").addEventListener ( "touchend"  , rightButtonUp   );
+    
+    if (PKDEVICE.platform() == "ios")
+    {
+      deviceFactor = 1.75;
+    }
+  }
+
+  gameView.reset = function ()
+  {
+    $ge("gameView_nextButton").innerHTML = __T("START");
+    showMessage (__T("TAP_TO_START"));
+    
+    // check to see if our control method has changed
+    if (!localStorage.controlSetting)
+    {
+      localStorage.controlSetting = "slide";
+    }
+    controlMethod = ( (localStorage.controlSetting) == "slide" ? 0 : 1 );
+    
+    if (controlMethod == 0)
+    {
+      $ge("gameView_overlay").addEventListener ( "touchstart", canvasTouchStart );
+      $ge("gameView_overlay").addEventListener ( "touchmove",  canvasTouchMove  );
+      $ge("gameView_overlay").addEventListener ( "touchend",   canvasTouchEnd   );
+    }
+    else
+    {
+      tiltWatch = navigator.accelerometer.watchAcceleration ( updateAccelerometer,
+                                                              accelerometerError,
+                                                              { frequency: 40 } );
+    }
+    
+  }
+
+  gameView.stop = function ()
+  {
+    clearTimeout ( timer );
+    if (controlMethod == 0)
+    {
+      $ge("gameView_overlay").removeEventListener ( "touchstart", canvasTouchStart );
+      $ge("gameView_overlay").removeEventListener ( "touchmove",  canvasTouchMove  );
+      $ge("gameView_overlay").removeEventListener ( "touchend",   canvasTouchEnd   );
+    }
+    else
+    {
+      navigator.accelerometer.clearWatch (tiltWatch);
+      tiltWatch = -1;
+    }
+  }
+  
+</script>

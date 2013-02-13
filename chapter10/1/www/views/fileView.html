@@ -1,0 +1,168 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Filer" view for Filer                              # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="fileView_title"></div>
+  <button class="barButton backButton" id="fileView_backButton" style="left:10px;" ></button>
+ </div>
+ <div class="content avoidNavigationBar" style="padding:0; zoverflow:scroll; " id="fileView_scroller">
+   <div id="fileView_contentArea">
+     <textarea id="fileView_text"></textarea>
+   </div>
+ </div>
+</div>
+
+
+
+
+<script>
+
+  var fileView = $ge("fileView") || {};
+  
+  fileView.theFileEntry = {};
+  fileView.theFilerDocument = {};
+  fileView.theSaveTimer = -1;
+  
+  fileView.setFileEntry = function ( theNewFileEntry )
+  {
+      fileView.theFileEntry = theNewFileEntry;
+      fileView.theFilerDocument = {};
+  }
+
+  /**
+  *
+  * Initializes the view.
+  *
+  */
+  fileView.initializeView = function ()
+  {
+    fileView.viewTitle = $ge("fileView_title");
+    fileView.viewTitle.innerHTML = __T("APP_TITLE");
+    PKUI.CORE.addTouchListener(fileView.viewTitle, "touchend", function () { fileView.entitleDocument(); } );
+
+    fileView.backButton = $ge("fileView_backButton");
+    fileView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(fileView.backButton, "touchend", function () { PKUI.CORE.popView(); });
+    
+    
+
+   /* if (device.platform != "WinCE")
+    {
+        fileView.myScroll = new SCROLLER.GenericScroller('fileView_contentArea');
+    } */    
+  }
+  
+  fileView.entitleDocument = function ()
+  {
+    var anAlert = new PKUI.MESSAGE.Prompt (__T("Entitle"),
+                                           __T("What's the title of this document?"),
+                                           "text",
+                                           fileView.theFilerDocument.getTitle(),
+                                           __T("Cancel<|Entitle>"),
+                                            function (i)
+                                            { 
+                                              if (i==1)
+                                              {
+                                                fileView.theFilerDocument.setTitle ( anAlert.inputElement.value );
+                                                fileView.viewTitle.innerHTML = fileView.theFilerDocument.getTitle();
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+  
+  fileView.loadDocument = function ()
+  {
+    // load our document.
+    fileView.viewTitle = $ge("fileView_title");
+    fileView.viewTitle.innerHTML = fileView.theFileEntry.name.substr(0,
+                                          fileView.theFileEntry.name.length-4);
+    fileView.theTextElement = $ge("fileView_text");
+    fileView.theTextElement.value = "";
+    
+    fileView.theFilerDocument = new DOC.Filer (
+                                            fileView.theFileEntry,
+                                            function ()
+                                            {
+                                              PKUTIL.delay(100, function () 
+                                                {
+                                                  console.log (JSON.stringify(fileView.theFilerDocument));
+                                                  fileView.viewTitle.innerHTML = fileView.theFilerDocument.getTitle();
+                                                  fileView.theTextElement.value = fileView.theFilerDocument.getText();
+                                                  fileView.theSaveTimer = setInterval ( fileView.saveDocument, 5000 );
+                                                  
+                                                } );
+                                            },
+                                            function (e)
+                                            {
+                                                PKUI.CORE.popView();
+                                                var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                  __T("Couldn't open the file.") );
+                                                anAlert.show();
+                                            }
+                                          );
+  }
+  
+  fileView.saveDocument = function ()
+  {
+      fileView.theFilerDocument.setText ( fileView.theTextElement.value );
+      fileView.theFilerDocument.saveFileContents (
+                                                   function ()
+                                                   {
+                                                       console.log ("Auto save successful.");
+                                                   },
+                                                   function (e)
+                                                   {
+                                                        PKUI.CORE.popView();
+                                                        var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                          __T("Couldn't save to the file.") );
+                                                        anAlert.show();
+                                                   }
+                                                 );
+  }
+  
+
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  */
+  fileView.viewWillAppear = function ()
+  {
+    
+    fileView.loadDocument(); // load in our document
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  fileView.viewWillHide = function ()
+  {
+    if (fileView.theSaveTimer!==-1)
+    {
+        // clear the interval so we don't save again.
+        clearInterval (fileView.theSaveTimer);
+        fileView.theSaveTimer = -1;
+    }
+    fileView.saveDocument();    // force the save so we have the up-to-date contents
+    documentsView.reloadAvailableDocuments(); // reload our directory structure (just in case)
+  }
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  fileView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+  
+  
+</script>

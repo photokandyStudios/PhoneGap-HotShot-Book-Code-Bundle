@@ -1,0 +1,441 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Documents" view for PathRec                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+  <div class="navigationBar">
+    <div id="documentsView_title"></div>
+    <button class="barButton" id="documentsView_createButton" style="right:10px" ></button>
+  </div>
+  <div class="content avoidNavigationBar " style="padding:0; overflow: scroll;" id="documentsView_scroller">
+    <div id="documentsView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+  </div>
+</div>
+
+<div id="documentsView_documentTemplate" class="hidden">
+  <div class="documentContainer" id="documentsView_item%INDEX%">
+    <div class="documentTapArea" id="documentsView_item%INDEX%_area"
+    onclick="documentsView.documentContainerTapped(%INDEX%);"></div>
+    <div class="documentImage">
+      <img id="documentsView_item%INDEX%_img"
+      src="./images/playButton.png" border=0
+      onclick="documentsView.documentContainerTapped(%INDEX%);"/>
+    </div>
+    <div class="documentTitle"
+    onclick="documentsView.documentContainerTapped(%INDEX%);">
+      <span >%TITLE%</span>
+    </div>
+    <div class="documentActions" id="documentsView_actions%INDEX%">
+      <button class="destructive barButton" id="documentsView_deleteButton%INDEX%"
+      onclick="documentsView.deleteDocument(%INDEX%); return false;">
+        %DELETE%
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var documentsView = $ge("documentsView") ||
+  {
+  };
+  documentsView.firstTime = true;
+  documentsView.lastScrollLeft = 0;
+  documentsView.lastScrollTop = 0;
+  documentsView.myScroll =
+  {
+  };
+  documentsView.availableDocuments =
+  {
+  };
+  documentsView.currentDocument = null;
+
+  documentsView.documentCurrentlyPlaying = -1;
+
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  documentsView.initializeView = function()
+  {
+    PKUTIL.include(["./models/VoiceRecDocumentCollection.js", "./models/VoiceRecDocument.js"], function()
+    {
+      // display the list of available documents
+      documentsView.displayAvailableDocuments();
+    });
+
+    documentsView.viewTitle = $ge("documentsView_title");
+    documentsView.viewTitle.innerHTML = __T("APP_TITLE");
+
+    documentsView.createButton = $ge("documentsView_createButton");
+    documentsView.createButton.innerHTML = __T("RECORD");
+    PKUI.CORE.addTouchListener(documentsView.createButton, "touchend", function(e)
+    {
+      PKUI.CORE.cancelEvent(e);
+      documentsView.createNewDocument();
+    });
+
+    if (device.platform != "WinCE")
+    {
+      documentsView.myScroll = new SCROLLER.GenericScroller('documentsView_contentArea');
+    }
+  }
+
+  documentsView.documentContainerTapped = function(idx)
+  {
+    // we're going to work with a media file, either by playing it
+    // or by pausing it.
+    var theElement = $ge("documentsView_item" + idx + "_img");
+
+    if (documentsView.documentCurrentlyPlaying == idx)
+    {
+      if (documentsView.currentDocument.isPlaying())
+      {
+        documentsView.currentDocument.pausePlayback();
+        theElement.setAttribute("src", "./images/playButton.png");
+      } else
+      {
+        documentsView.currentDocument.startPlayback();
+        theElement.setAttribute("src", "./images/pauseButton.png");
+      }
+    } else
+    {
+      if (documentsView.documentCurrentlyPlaying > -1)
+      {
+        // we have an existing document and need to stop it first
+        var theOldElement = $ge("documentsView_item" + documentsView.documentCurrentlyPlaying + "_img");
+        documentsView.currentDocument.releaseResources();
+        documentsView.currentDocument = null;
+        documentsView.documentCurrentlyPlaying = -1;
+        theOldElement.setAttribute("src", "./images/playButton.png");
+      }
+      documentsView.currentDocument = new DOC.VoiceRecDocument(documentsView.availableDocuments.getDocumentAtIndex(idx), documentsView.mediaSuccess, null);
+      documentsView.currentDocument.startPlayback();
+      documentsView.documentCurrentlyPlaying = idx;
+      theElement.setAttribute("src", "./images/pauseButton.png");
+    }
+  }
+
+  documentsView.mediaSuccess = function()
+  {
+    // we've stopped, so release and destroy
+    var theElement = $ge("documentsView_item" + documentsView.documentCurrentlyPlaying + "_img");
+    documentsView.currentDocument.releaseResources();
+    documentsView.currentDocument = null;
+    documentsView.documentCurrentlyPlaying = -1;
+    theElement.setAttribute("src", "./images/playButton.png");
+  }
+
+  documentsView.displayAvailableDocuments = function()
+  {
+
+    documentsView.availableDocuments = new DOCS.VoiceRecDocumentCollection(documentsView.documentIterator, function()// failure function
+    {
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("I couldn't read your persistent storage!"));
+      anAlert.show();
+    });
+
+  }
+
+  documentsView.reloadAvailableDocuments = function()
+  {
+    documentsView.availableDocuments.loadFileSystem(documentsView.documentIterator, function()// failure function
+    {
+      var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("I couldn't read your persistent storage!"));
+      anAlert.show();
+    });
+
+  }
+
+  documentsView.documentIterator = function(o)
+  {
+    var theHTML = "";
+    var theNumberOfDocuments = 0;
+    for (var i = 0; i < o.getDocumentCount(); i++)
+    {
+      var theDocumentEntry = o.getDocumentAtIndex(i);
+
+      theHTML += PKUTIL.instanceOfTemplate($ge("documentsView_documentTemplate"),
+      {
+        "title" : theDocumentEntry.name.substr(0, theDocumentEntry.name.length - 4),
+        "index" : i,
+        "delete" : __T("DELETE")
+      });
+      theNumberOfDocuments++;
+    }
+
+    $ge("documentsView_contentArea").innerHTML = theHTML;
+    PKUTIL.delay(100, function()
+    {
+      for (var i = 0; i < theNumberOfDocuments; i++)
+      {
+        var theElement = $ge("documentsView_item" + i + "");
+        var theLPGesture = new GESTURES.LongPressGesture(theElement, function(o)
+        {
+          documentsView.longPressReceived(o.data);
+        });
+        theLPGesture.data = i;
+        var theHSGesture = new GESTURES.HorizontalSwipeGesture(theElement, function(o)
+        {
+          documentsView.horizontalSwipeReceived(o.data);
+        });
+        theHSGesture.data = i;
+      }
+    });
+  }
+
+  documentsView.longPressReceived = function(idx)
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Select Action"), __T("Select an action to perform:"), "Copy|Name|Cancel<", function(i)
+    {
+      PKUTIL.delay(100, function()
+      {
+        if (i == 0)
+        {
+          documentsView.copyDocument(idx);
+        }
+        if (i == 1)
+        {
+          documentsView.renameDocument(idx);
+        }
+      });
+    });
+    anAlert.show();
+  }
+
+  documentsView.horizontalSwipeReceived = function(idx)
+  {
+    var theActionContainer = $ge("documentsView_actions" + idx);
+    if (theActionContainer.style.display == "block")
+    {
+      theActionContainer.style.opacity = "0";
+      PKUTIL.delay(400, function()
+      {
+        theActionContainer.style.display = "none";
+      });
+    } else
+    {
+      theActionContainer.style.display = "block";
+      PKUTIL.delay(50, function()
+      {
+        theActionContainer.style.opacity = "1";
+      });
+    }
+
+  }
+
+  documentsView.openDocument = function(idx)
+  {
+    documentsView.availableDocuments.openDocumentAtIndex(idx, function()
+    {
+      mapView.setFileEntry(documentsView.availableDocuments.getFileEntry());
+      PKUI.CORE.pushView(mapView);
+    }, function(e)
+    {
+      console.log(JSON.stringify(e))
+    });
+  }
+
+  documentsView.startRecording = function (theFileEntry)
+  {
+	  // now that we have the file, let's create a media
+	  // object for it.
+	  documentsView.currentDocument = new DOC.VoiceRecDocument(theFileEntry, null, null);
+	  console.log(8);
+	  var anAlert = new PKUI.MESSAGE.Confirm(
+	       __T("Recording..."),
+	       "<img src='./images/microphone.png' width=54 height=123>",
+	       __T("STOP_"), function(i)
+	  {
+	    documentsView.currentDocument.stopRecording();
+	    documentsView.currentDocument.releaseResources();
+	    documentsView.currentDocument = null;
+	    documentsView.documentCurrentlyPlaying = -1;
+	    console.log (14);
+	    documentsView.reloadAvailableDocuments();
+	  });
+	  anAlert.show();
+	  console.log(9);
+	  documentsView.currentDocument.startRecording();
+	  console.log(10);
+  }
+
+  documentsView.createNewDocument = function()
+  {
+    var anAlert = new PKUI.MESSAGE.Prompt(__T("Create Document"), __T("This will create a new document with the name below:"), "text", "Memo " + __D(new Date(), "yyyy-MM-dd HH-mm-ss"), __T("Don't Create<|Create>"), function(i)
+    {
+      if (i === 1)
+      {
+        var fileType = ".wav";
+        if (PKDEVICE.platform()=="android")
+        {
+          fileType = ".3gp";
+        }
+        documentsView.availableDocuments.createDocument("" + anAlert.inputElement.value + fileType, function()
+        {
+          console.log(1);
+          // if we have a document currently loaded,
+          // we need to stop it..
+          if (documentsView.documentCurrentlyPlaying > -1)
+          {
+            documentsView.mediaSuccess();
+          }
+          console.log(2);
+          // check for existence in the file structure
+          // and create, if necessary.
+          var theFileEntry = documentsView.availableDocuments.getFileEntry();
+          console.log(3);
+
+          // create an empty .wav file, but only for iOS
+          if (PKDEVICE.platform()=="ios")
+          {
+	          console.log(4);
+	          theFileEntry.createWriter(function(writer)
+	          {
+	            console.log(5);
+	            writer.onwriteend = function(e)
+	            {
+	              documentsView.startRecording (theFileEntry);
+	            };
+	
+	            writer.write("It doesn't matter what goes here.");
+	            console.log(12);
+	          }, function(err)
+	          {
+	            console.log(6);
+	            var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't create the file."));
+	            anAlert.show();
+	          });
+  	      }
+  	      else
+  	      {
+  	        if (PKDEVICE.platform()=="android")
+  	        {
+  	          // delete the file first... *sigh*
+  	          theFileEntry.remove( function () { documentsView.startRecording(theFileEntry); } , null );
+  	        }
+  	        else
+  	        {
+  	          documentsView.startRecording(theFileEntry);
+  	        }
+  	      }
+        }, function(e)
+        {
+          var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't create the file."));
+          anAlert.show();
+        });
+      }
+    });
+    anAlert.show();
+  }
+
+  documentsView.renameDocument = function(idx)
+  {
+    var theFile = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    var theFileName = PKUTIL.FILE.getFileNamePart(theFile);
+    var theFileExt = PKUTIL.FILE.getFileExtensionPart(theFile);
+
+    var anAlert = new PKUI.MESSAGE.Prompt(__T("Rename Document"), __T("Rename your document to the following:"), "text", theFileName, __T("Cancel<|Rename>"), function(i)
+    {
+      if (i == 1)
+      {
+        if (documentsView.documentCurrentlyPlaying > -1)
+        {
+          documentsView.currentDocument.releaseResources();
+        }
+        var theNewFileName = "" + anAlert.inputElement.value + PKUTIL.FILE.extensionSeparator + theFileExt;
+
+        try
+        {
+          documentsView.availableDocuments.renameDocumentAtIndexTo(idx, theNewFileName, documentsView.documentIterator, function(e)
+          {
+            var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't rename the file."));
+            anAlert.show();
+          });
+        } catch (e)
+        {
+          var anotherAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't rename the file."));
+          anotherAlert.show();
+        }
+      }
+    });
+    anAlert.show();
+  }
+
+  documentsView.copyDocument = function(idx)
+  {
+    var theFile = documentsView.availableDocuments.getDocumentAtIndex(idx).name;
+    var theFileName = PKUTIL.FILE.getFileNamePart(theFile);
+    var theFileExt = PKUTIL.FILE.getFileExtensionPart(theFile);
+
+    var anAlert = new PKUI.MESSAGE.Prompt(__T("Copy Document"), __T("This will create a duplicate document with the following name:"), "text", theFileName + " Copy", __T("Cancel<|Copy>"), function(i)
+    {
+      if (i == 1)
+      {
+        var theNewFileName = "" + anAlert.inputElement.value + PKUTIL.FILE.extensionSeparator + theFileExt;
+
+        documentsView.availableDocuments.copyDocumentAtIndexTo(idx, theNewFileName, documentsView.documentIterator, function(e)
+        {
+
+          var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't copy the file."));
+          anAlert.show();
+        });
+
+      }
+    });
+    anAlert.show();
+  }
+
+  documentsView.deleteDocument = function(idx)
+  {
+    var anAlert = new PKUI.MESSAGE.Confirm(__T("Remove Document"), __T("This will remove the document. This action is unrecoverable."), __T("Don't Remove<|Remove*"), function(i)
+    {
+      if (i == 1)
+      {
+        if (documentsView.documentCurrentlyPlaying > -1)
+        {
+          documentsView.currentDocument.releaseResources();
+        }
+        documentsView.availableDocuments.deleteDocumentAtIndex(idx, documentsView.documentIterator, function(e)
+        {
+          var anAlert = new PKUI.MESSAGE.Alert(__T("Oops!"), __T("Couldn't delete the file."));
+          anAlert.show();
+        });
+      }
+    });
+    anAlert.show();
+  }
+  /**
+   *
+   * Called by PKUI.CORE.pushView when we are about to appear.
+   *
+   */
+  documentsView.viewWillAppear = function()
+  {
+    if (documentsView.myScroll.scrollTo)
+    {
+      PKUTIL.delay(50, function()
+      {
+        documentsView.myScroll.scrollTo(documentsView.lastScrollLeft, documentsView.lastScrollTop);
+      });
+    }
+  }
+  /**
+   *
+   * Called by PKUI.CORE when we are about to be hidden
+   *
+   */
+  documentsView.viewWillHide = function()
+  {
+    if (documentsView.myScroll.getScrollLeft)
+    {
+      documentsView.lastScrollLeft = documentsView.myScroll.getScrollLeft();
+      documentsView.lastScrollTop = documentsView.myScroll.getScrollTop();
+    }
+  }
+
+</script>

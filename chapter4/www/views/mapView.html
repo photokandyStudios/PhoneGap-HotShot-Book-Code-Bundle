@@ -1,0 +1,273 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Filer" view for Filer                              # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="mapView_title"></div>
+  <span style="display: block; position: absolute; right:10px; top: 6px; width:auto; text-align: right;">
+    <span class="iconButton " id="mapView_trackButton" style="margin-right: 10px;" ></span>
+    <span class="iconButton " id="mapView_actionButton" ></span>
+  </span>
+  <button class="barButton backButton" id="mapView_backButton" style="left:10px;" ></button>
+ </div>
+ <div class="content avoidNavigationBar" style="padding:0; overflow:hidden; " id="mapView_scroller">
+   <div id="mapView_contentArea">
+     <div id="mapView_mapCanvas" style="width:100%; height:100%;">
+     </div>
+   </div>
+ </div>
+</div>
+
+
+
+
+<script>
+/*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var mapView = $ge("mapView") || {};
+  
+  mapView.theFirstTime = true;
+  mapView.theFileEntry = {};
+  mapView.thePathDocument = {};
+  mapView.theSaveTimer = -1;
+  mapView.map = {};
+  mapView.watchID = -1;
+  mapView.polyline;
+  mapView.currentPositionMarker = {};
+  mapView.keepMapCentered = true;
+  mapView.lastKnownPosition = {};
+  mapView.recordingPath = false;
+  
+  mapView.setFileEntry = function ( theNewFileEntry )
+  {
+      mapView.theFileEntry = theNewFileEntry;
+      mapView.thePathDocument = {};
+  }
+
+  /**
+  *
+  * Initializes the view.
+  *
+  */
+  mapView.initializeView = function ()
+  {
+    mapView.viewTitle = $ge("mapView_title");
+    mapView.viewTitle.innerHTML = __T("APP_TITLE");
+    PKUI.CORE.addTouchListener(mapView.viewTitle, "touchend", function () { mapView.entitleDocument(); } );
+
+    mapView.backButton = $ge("mapView_backButton");
+    mapView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(mapView.backButton, "touchend", function () { PKUI.CORE.popView(); });
+    
+    mapView.actionButton = $ge("mapView_actionButton");
+    mapView.actionButton.innerHTML = __T("RECORD");
+    PKUI.CORE.addTouchListener(mapView.actionButton, "touchend", function () { mapView.actionButtonPressed(); });
+
+    mapView.trackButton = $ge("mapView_trackButton");
+    mapView.trackButton.innerHTML = __T("CENTER");
+    PKUI.CORE.addTouchListener(mapView.trackButton, "touchend", function () { mapView.trackButtonPressed(); });
+    
+  }
+  
+  mapView.actionButtonPressed = function ()
+  {
+    mapView.recordingPath = !mapView.recordingPath;
+    if (mapView.recordingPath)
+    {
+      mapView.actionButton.innerHTML = __T("STOP");
+    }
+    else
+    {
+      mapView.actionButton.innerHTML = __T("RECORD");
+    }
+    mapView.geolocationUpdate ( mapView.lastKnownPosition );
+  }
+  
+  mapView.trackButtonPressed = function ()
+  {
+    mapView.keepMapCentered = true;
+    mapView.geolocationUpdate ( mapView.lastKnownPosition );
+  }
+  
+  mapView.geolocationUpdate = function ( position )
+  {
+    var theLatLng = new google.maps.LatLng ( position.coords.latitude,
+                                             position.coords.longitude );
+    mapView.lastKnownPosition = position;
+    if (mapView.keepMapCentered)
+    {
+      mapView.map.panTo ( theLatLng );
+    }
+    mapView.currentPositionMarker.setPosition (theLatLng);
+    
+    if (mapView.recordingPath)
+    {
+      mapView.polyline.getPath().push ( theLatLng );
+      mapView.thePathDocument.addNode ( new DOC.PathRecDocumentItem ( position ) );
+    }
+  }
+  
+  mapView.geolocationError = function ( error )
+  { 
+    var anAlert =
+      new PKUI.MESSAGE.Alert (
+        __T("Geolocation Error"),
+        __T(error.message) );
+    anAlert.show();
+  }
+  
+  mapView.entitleDocument = function ()
+  {
+    var anAlert = new PKUI.MESSAGE.Prompt (__T("Entitle"),
+                                           __T("What's the title of this document?"),
+                                           "text",
+                                           mapView.thePathDocument.getTitle(),
+                                           __T("Cancel<|Entitle>"),
+                                            function (i)
+                                            { 
+                                              if (i==1)
+                                              {
+                                                mapView.thePathDocument.setTitle ( anAlert.inputElement.value );
+                                                mapView.viewTitle.innerHTML = mapView.thePathDocument.getTitle();
+                                              }
+                                            }
+                                           );
+    anAlert.show();
+  }
+  
+  mapView.loadDocument = function ()
+  {
+    // load our document.
+    mapView.viewTitle = $ge("mapView_title");
+    mapView.viewTitle.innerHTML = mapView.theFileEntry.name.substr(0,
+                                          mapView.theFileEntry.name.length-4);
+
+    mapView.thePathDocument = new DOC.PathRecDocument (
+                                            mapView.theFileEntry,
+                                            function ()
+                                            { 
+                                              PKUTIL.delay(100, function() 
+                                                {
+                                                  mapView.viewTitle.innerHTML = mapView.thePathDocument.getTitle();
+                                                  mapView.theSaveTimer = setInterval ( mapView.saveDocument, 5000 );
+                                                  console.log (mapView.thePathDocument.getNodeCount());
+                                                  for (var i=0; i<mapView.thePathDocument.getNodeCount(); i++)
+                                                  {
+                                                    var theNode = mapView.thePathDocument.getNodeAtIndex ( i );
+                                                    mapView.polyline.getPath().push ( new google.maps.LatLng ( theNode.latitude, theNode.longitude ) );
+                                                  }                                                  
+                                                });
+
+
+                                            },
+                                            function (e)
+                                            {
+                                                PKUI.CORE.popView();
+                                                var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                  __T("Couldn't open the file.") );
+                                                anAlert.show();
+                                            }
+                                          );
+    // read the coordinates into our polyline
+    mapView.polyline = new google.maps.Polyline ( { strokeColor: '#80A0C0', strokeOpacity:0.85, strokeWeight:5 } );
+    mapView.polyline.setMap ( mapView.map );
+  }
+  
+  mapView.saveDocument = function ()
+  {
+      mapView.thePathDocument.saveFileContents (
+                                                   function ()
+                                                   {
+                                                       console.log ("Auto save successful.");
+                                                   },
+                                                   function (e)
+                                                   {
+                                                        PKUI.CORE.popView();
+                                                        var anAlert = new PKUI.MESSAGE.Alert (__T("Oops!"),
+                                                                          __T("Couldn't save to the file.") );
+                                                        anAlert.show();
+                                                   }
+                                                 );
+  }
+  
+
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  */
+  mapView.viewWillAppear = function ()
+  {
+    mapView.actionButton.innerHTML = __T("RECORD");
+    mapView.trackButton.innerHTML = __T("CENTER");
+  }
+  mapView.viewDidAppear = function ()
+  {
+    if (mapView.theFirstTime)
+    {
+        //set up our map
+        mapView.map = new google.maps.Map ( $ge("mapView_mapCanvas"),
+                                            {  disableDefaultUI: true,
+                                              center: new google.maps.LatLng(40,-90),
+                                              zoom: 15,
+                                              mapTypeId: google.maps.MapTypeId.ROADMAP
+                                            }
+                                          );
+        google.maps.event.addListener ( mapView.map, 'dragstart', function () { mapView.keepMapCentered = false; } );
+        mapView.currentPositionMarker = new google.maps.Marker(
+          {
+            map:mapView.map,
+            title: "Current Position"
+          }
+        );
+        mapView.theFirstTime = false;
+    }
+    // set up our geolocation watch
+    mapView.watchID = navigator.geolocation.watchPosition ( mapView.geolocationUpdate,
+                                                            mapView.geolocationError,
+                                                            {
+                                                              enableHighAccuracy: true
+                                                            }
+                                                          );
+
+    mapView.loadDocument(); // load in our document
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  mapView.viewWillHide = function ()
+  {
+    navigator.geolocation.clearWatch ( mapView.watchID );
+    mapView.recordingPath = false;
+    mapView.keepMapCentered = true;
+    mapView.polyline.setMap (null); // remove from the map.
+    mapView.polyline = null; // and destroy.
+    if (mapView.theSaveTimer!==-1)
+    {
+        // clear the interval so we don't save again.
+        clearInterval (mapView.theSaveTimer);
+        mapView.theSaveTimer = -1;
+    }
+    mapView.saveDocument();    // force the save so we have the up-to-date contents
+    documentsView.reloadAvailableDocuments(); // reload our directory structure (just in case)
+    console.log ("cleaned up fileview...");
+  }
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  mapView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+  
+  
+</script>

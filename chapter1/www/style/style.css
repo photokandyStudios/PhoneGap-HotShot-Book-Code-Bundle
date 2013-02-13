@@ -1,0 +1,51 @@
+.wince #rootContainer
+{
+  background-image: url(../images/Background.jpg);
+  background-size: cover;
+}
+
+.navigationBar
+{
+  background-image: url(../images/NavigationBar.png);
+  color: #FFF;
+  background-color: transparent;
+}
+.wince .navigationBar
+{
+  background-image: none;
+  background-color: transparent !important;
+}
+
+.toolBar
+{
+  background-image: url(../images/ToolBar.png);
+}
+.wince .toolBar
+{
+  background-image: none;
+  background-color: transparent !important;
+}
+
+.viewBackground
+{
+  background-image: url(../images/Background.jpg);
+  background-size: cover;
+}
+.wince .viewBackground
+{
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+.answerButton
+{
+  position: relative; 
+  background-color:#248 !important; 
+  margin-bottom:1em;
+}
+
+.answerButton.touched
+{
+  background-color:#36C !important; 
+}
+

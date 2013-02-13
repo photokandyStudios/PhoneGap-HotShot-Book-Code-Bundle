@@ -1,0 +1,192 @@
+.wince #rootContainer {
+	background-color: #000;
+}
+
+.navigationBar {
+	background-image: url(../images/NavigationBar.png);
+	color: #FFF;
+	background-color: transparent;
+	z-index: 1;
+	box-shadow: 0px 3px 10px #000;
+}
+
+.toolBar {
+	background-image: url(../images/ToolBar.png);
+	color: #FFF;
+	background-color: transparent;
+	z-index: 1;
+	box-shadow: 0px -3px 10px #000;
+}
+
+.android .navigationBar, .android .toolBar {
+	background-image: none;
+	background-color: #333;
+	color: #FFF;
+	text-align: left;
+}
+
+.wince .navigationBar, .wince .toolBar {
+	background-image: none;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	border-radius: 0px;
+}
+
+.content {
+	background-color: #000;
+	color: #CCC;
+}
+
+.ios .content {
+	background-image: url(../images/Background.png);
+	background-repeat: repeat-x;
+}
+
+.wince .content {
+	background-image: none !important;
+	background-color: transparent !important;
+	color: #FFF;
+}
+
+.viewBackground {
+	background-color: #000;
+}
+
+.wince .viewBackground {
+	background-image: none !important;
+	border-radius: 0px;
+}
+
+.ios .navigationBar .barButton {
+	background-color: rgba(0,0,0,.25);
+}
+
+.wince .navigationBar .barButton {
+	top: 20px;
+}
+
+#startView_contentArea,
+#optionsView_contentArea
+{
+  background-image: url('../images/splash.png') !important;
+  height: 100% !important;
+}
+#startView_startButton,
+#startView_optionsButton,
+#optionsView_backButton,
+#gameView_backButton,
+#gameView_nextButton
+{
+  position: absolute;
+  left: 50px;
+  width: 200px;
+  background-color: #8BF;
+  height: 2em;
+  font-size: 24pt;
+  line-height: 1.75em;
+  text-align: center;
+  color: white;
+  border: 4px solid white;
+  border-radius: 1em;
+  text-shadow: 0 1px 1px #000;
+  box-shadow: 0px 10px 20px #000, 1px 1px 1px #000 inset;
+  -webkit-transform: rotate(-12deg);
+}
+
+#startView_startButton
+{
+  top:145px;
+}
+#startView_optionsButton
+{
+  top: 240px;
+  left: 100px;
+  -webkit-transform: rotate(12deg);
+}
+
+#optionsView_backButton
+{
+  top: 300px;
+  left: 32px;
+  -webkit-transform: rotate(12deg);
+}
+#gameView_backButton
+{
+  bottom: 75px;
+  width:66%;
+  left:17%;
+  -webkit-transform: rotate(-6deg);
+}
+#gameView_nextButton
+{
+  bottom: 175px;
+  width:66%;
+  left:17%;
+  -webkit-transform: rotate(6deg);
+}
+
+#optionsView_changeControls
+{
+  position: absolute;
+  top: 120px;
+  left: 32px;
+  width: 256px;
+}
+
+#optionsView_tilt,
+#optionsView_slide
+{
+  width: 128px;
+  text-align: center;
+  font-family: "Bradley Hand",sans-serif;
+  font-size: 24pt;
+  color: #FFFF80;
+  text-shadow: 0px -1px 1px #000;
+  height: 160px;
+  float: left;
+  color: #FFFFFF;
+}
+
+#optionsView_tilt.selected,
+#optionsView_slide.selected
+{
+  color: #FFFF80;
+  background-color: rgba(255,255,255,0.25);
+  border-radius: 25px;
+}
+
+   #gameView_canvas { background-color:#000; }
+   #gameView_left, #gameView_right { background-color: rgba(255,255,255,0.25);
+            width: 24%;
+            height: 24%;
+            position: absolute;
+            bottom: 10px;
+            border-radius:20px;
+            line-height:250%;
+            text-align: center;
+            font-size: 24pt;
+            font-weight: bold;
+            display: none;
+          }
+    #gameView_left { left:10px; }
+    #gameView_right { right:10px; }
+    #gameView_overlay { position: absolute;
+         top: 0;
+         right: 0;
+         left: 0;
+         bottom: 0;
+         width: 100%;
+         height: 100%;
+         z-index:99;
+       }
+    #gameView_msg { position: absolute;
+         top: 40%;
+         left: 0%;
+         right: 0%;
+         bottom: 40%;
+         font-weight: bold;
+         color: #FFFF00;
+         font-size:25pt;
+         text-align: center;
+       }
+

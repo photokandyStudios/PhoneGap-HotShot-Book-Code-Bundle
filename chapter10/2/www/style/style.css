@@ -1,0 +1,135 @@
+.wince #rootContainer
+{
+  background-color: #000;
+}
+
+.navigationBar
+{
+  background-image: url(../images/NavigationBar.png);
+  color: #FFF;
+  background-color: transparent;
+  z-index:1;
+  box-shadow: 0px 3px 10px #000;
+  background-size: 45px 45px;
+}
+
+.android .navigationBar
+{
+  background-image: none;
+  background-color: #333;
+  color: #FFF;
+  text-align: left;
+}
+
+.wince .navigationBar
+{
+  background-image: none;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0px;
+}
+
+
+.content
+{
+  background-color: #000;
+  color: #CCC;
+}
+
+.ios .content
+{
+  background-image: url(../images/Background.png);
+  background-repeat: repeat;
+  background-size: 50% 50%;
+}
+
+.wince .content
+{
+  background-image: none !important;
+  background-color: transparent !important;
+  color: #FFF;
+}
+
+
+.viewBackground
+{
+  background-color: #000;
+}
+
+.wince .viewBackground
+{
+  background-image: none !important;
+  border-radius: 0px;
+}
+
+.wince .navigationBar .barButton
+{
+  top: 20px;
+}
+
+.documentContainer
+{
+  padding: 10px;
+  background-color: #FFFFFF;
+  width: 100%;
+  height: 90px;
+  color: #000;
+  text-align: left;
+  border-bottom: 1px solid #C0C2C4;
+}
+.documentContainer .documentImage img
+{
+    width: 60px;
+    height: 70px;
+}
+
+.documentContainer .documentImage
+{
+  width: 70px;
+  height: 80px;
+  float: left;
+}
+
+.documentContainer .documentTitle
+{
+  height: 2em;
+}
+
+#fileView_text
+{
+    width:100%;
+    height:100%;
+    -webkit-appearance: none;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    background-color: #F0ECEA;
+    color: #543;
+    font-size: 12pt;
+    font-family: "HelveticaNeue-Light", "Helvetica", "Arial", sans-serif;
+}
+
+#fileView_contentArea
+{
+   padding: 0;
+   height: 100%;
+   position: relative;
+}
+
+.ios #fileView_title
+{
+    left: 73px;
+    right: 73px;
+}
+
+.landscape #documentsView_closeButton,
+.landscape #fileView_documentsButton
+{
+  display: none;
+}
+
+.portrait #documentsView_closeButton,
+.portrait #fileView_documentsButton
+{
+  display: inline-block;
+}

@@ -1,0 +1,115 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "End" view for Quiz Time                            # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="endView_title"></div>
+  <button class="barButton backButton" id="endView_backButton" style="left:10px" ></button>
+ </div>
+ <div class="content avoidNavigationBar avoidToolBar" id="endView_gameArea">
+  <div id="endView_resultsArea"></div>
+ </div>
+ <div class="toolBar">
+  <button class="barButton" id="endView_tryAgainButton" style="right:10px" ></button>
+ </div>
+</div>
+
+<div id="endView_template_en" class="hidden">
+  <h2>Congratulations!</h2>
+  <p>You finished that round with a score of %SCORE%!</p>
+  <p>Dated: %DATE%</p>
+</div>
+
+<div id="endView_template_es" class="hidden">
+  <h2>¡Felicitaciones!</h2>
+  <p>¡Se terminó la ronda con una puntuación de %SCORE%!</p>
+  <p>Fecha: %DATE%</p>
+</div>
+
+<script>
+  
+  var endView = $ge("endView") || {};  // properly namespace
+  
+  endView.score = 0;
+  
+  /**
+   *
+   * Sets the score so that we can display it to the user
+   *
+   */
+  endView.setScore = function( theScore )
+  {
+    endView.score = theScore;
+  }
+  
+  /**
+   *
+   * Initializes our view.
+   *
+   * We set the view title, the back button's title, localize the Try Again text, 
+   * and attach the touch events to both buttons.
+   *
+   */
+  endView.initializeView = function ()
+  {
+    
+    endView.viewTitle = $ge("endView_title");
+    endView.viewTitle.innerHTML = __T("RESULTS"); 
+    
+    endView.backButton = $ge("endView_backButton");
+    endView.backButton.innerHTML = __T("BACK");
+    PKUI.CORE.addTouchListener(endView.backButton, "touchend", function () { PKUI.CORE.popView(); });
+    
+    endView.nextButton = $ge("endView_tryAgainButton");
+    endView.nextButton.innerHTML = __T("TRY_AGAIN?");
+    
+    PKUI.CORE.addTouchListener(endView.nextButton, "touchend", function () { PKUI.CORE.popView(); });
+  
+    endView.questionArea = $ge("endView_resultsArea");
+  }
+  
+  
+  /**
+   *
+   * Called by PKUI.CORE.pushView() when we're about to be displayed.
+   *
+   * Localize the congratulation message and display it in the view.
+   *
+   */
+  endView.viewWillAppear = function ()
+  {
+
+    // the score should already have been set -- let's display it
+
+    var theTemplate = $geLocale("endView_template").innerHTML;
+    
+    theTemplate = theTemplate.replace ( "%SCORE%", __N(endView.score, "2") );
+    theTemplate = theTemplate.replace ( "%DATE%",  __D(new Date(), "D") );
+    
+    
+    endView.questionArea.innerHTML = theTemplate;
+  }
+  
+  /**
+   *
+   * Called by PKUI.CORE when we are about to be hidden
+   *
+   */
+  endView.viewWillHide = function ()
+  {
+  }
+  
+  /**
+   *
+   * Handle Android's Back Button
+   *
+   */
+  endView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+
+</script>

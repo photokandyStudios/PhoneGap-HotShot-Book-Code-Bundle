@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/mtools/!svn/ver/4/trunk/src/www/framework
+END
+scroller.js
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/mtools/!svn/ver/295/trunk/src/www/framework/scroller.js
+END
+base.css
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/mtools/!svn/ver/283/trunk/src/www/framework/base.css
+END
+globalize.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/mtools/!svn/ver/4/trunk/src/www/framework/globalize.js
+END
+localization.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/mtools/!svn/ver/223/trunk/src/www/framework/localization.js
+END
+google-maps.js
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/mtools/!svn/ver/4/trunk/src/www/framework/google-maps.js
+END
+ui-gestures.js
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/mtools/!svn/ver/223/trunk/src/www/framework/ui-gestures.js
+END
+fileutil.js
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/mtools/!svn/ver/223/trunk/src/www/framework/fileutil.js
+END
+device.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/mtools/!svn/ver/235/trunk/src/www/framework/device.js
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/mtools/!svn/ver/4/trunk/src/www/framework/README.txt
+END
+ui-msg.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/mtools/!svn/ver/256/trunk/src/www/framework/ui-msg.js
+END
+ui-core.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/mtools/!svn/ver/295/trunk/src/www/framework/ui-core.js
+END
+utility.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/mtools/!svn/ver/223/trunk/src/www/framework/utility.js
+END

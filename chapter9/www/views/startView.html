@@ -1,0 +1,73 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Start" View for Socializer                         # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="content" style="padding:0; overflow: scroll; -webkit-overflow-scrolling: touch;" id="startView_scroller">
+  <div class="content" id="startView_welcome">
+  </div>
+ </div>
+</div>
+
+<div id="startView_welcome_en" class="hidden">
+ <h2>PhoneGap Hotshot Sample Application</h2>
+ <h3>Chapter 9: Let's Get Social, Again</h3>
+ <p>This application demonstrates interaction
+    with native iOS controls, including:
+ </p>
+    <ul>
+      <li>the Navigation Bar</li>
+      <li>the Tab Bar</li>
+      <li>Message Boxes</li>
+      <li>Action Sheets</li>
+      <li>...and Picker Views</li>
+    </ul>
+</div>
+
+<script>
+  var startView = $ge("startView") || {}; // properly namespace
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  startView.initializeView = function() {
+
+    // based on our locale, load the appropriate
+    // welcome content.
+    var theWelcomeContent = $geLocale("startView_welcome");
+    $ge("startView_welcome").innerHTML = theWelcomeContent.innerHTML;
+
+  }
+  
+  startView.viewDidAppear = function () {
+    // set up our navigation bar
+    // it should have the app's title in the center,
+    // a "Start" button on the right, and no left button.
+    plugins.navigationBar.hideLeftButton();
+    plugins.navigationBar.hideRightButton();
+    plugins.navigationBar.setTitle(__T("APP_TITLE"));
+    plugins.navigationBar.setupRightButton( __T("START"), null, startView.startApp);
+    plugins.navigationBar.showRightButton();
+
+  }
+  startView.viewWillHide = function ()
+  {
+    // clean up our navigation bar -- get rid of any displayed buttons
+    plugins.navigationBar.hideLeftButton();
+    plugins.navigationBar.hideRightButton();
+    plugins.navigationBar.setTitle("");
+  }
+
+  /**
+   *
+   * Called when the user touches the "Start" button.
+   *
+   */
+  startView.startApp = function() {
+    PKUI.CORE.pushView(socialView);
+  }
+  
+</script>

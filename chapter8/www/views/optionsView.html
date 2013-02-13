@@ -1,0 +1,99 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Start" view for Cave Runner                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+    <div id="optionsView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+</div>
+
+<div id="optionsView_actions" class="hidden">
+ <div id="optionsView_changeControls">
+  <div id="optionsView_tilt" ontouchend="optionsView.selectTilt();" ><img src="./images/tilt.png" width=128 height=128>
+    %TILT%
+  </div>
+  <div id="optionsView_slide" ontouchend="optionsView.selectSlide();"><img src="./images/slide.png" width=128 height=128>
+    %SLIDE%
+  </div>
+ </div>
+ <div id="optionsView_backButton" ontouchend="PKUI.CORE.popView();" >%BACK%</div>
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var optionsView = $ge("optionsView") || {};
+
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  optionsView.initializeView = function()
+  {
+
+    $ge("optionsView_contentArea").innerHTML =
+    
+    PKUTIL.instanceOfTemplate ( $ge("optionsView_actions"),
+                                { "tilt": __T("TILT"),
+                                  "slide": __T("SLIDE"),
+                                  "back": __T("BACK")
+                                }
+                              );
+    
+    optionsView.displayControlSetting();
+    
+
+
+  }
+  
+  optionsView.displayControlSetting = function ()
+  {
+    $ge("optionsView_slide").className="";
+    $ge("optionsView_tilt").className="";
+    if (localStorage.controlSetting)
+    {
+      // use the saved setting
+      if (localStorage.controlSetting == "slide")
+      {
+        $ge("optionsView_slide").className="selected";
+      }
+      else
+      {
+        $ge("optionsView_tilt").className="selected";
+      }
+    }
+    else
+    {
+      // default to the slide control option
+      $ge("optionsView_slide").className="selected";
+    }
+  }
+  
+  optionsView.selectTilt = function ()
+  {
+    localStorage.controlSetting = "tilt";
+    optionsView.displayControlSetting();
+  }
+
+  optionsView.selectSlide = function ()
+  {
+    localStorage.controlSetting = "slide";
+    optionsView.displayControlSetting();
+  }
+  
+  optionsView.viewWillAppear = function ()
+  {
+  }
+  optionsView.viewWillHide = function ()
+  {
+  }
+
+  optionsView.backButtonPressed = function ()
+  {
+    PKUI.CORE.popView();
+  }
+
+
+</script>

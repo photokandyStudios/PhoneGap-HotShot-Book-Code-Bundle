@@ -1,0 +1,178 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Game" view for Quiz Time                           # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+ <div class="navigationBar">
+  <div id="gameView_title"></div>
+  <button class="barButton backButton" id="gameView_backButton" style="left:10px" ></button>
+ </div>
+ <div class="content avoidNavigationBar avoidToolBar" id="gameView_gameArea">
+  <div id="gameView_scoreArea" style="height:1em; text-align: center;"></div>
+  <div id="gameView_questionArea" style="text-align: center"></div>
+ </div>
+ <div class="toolBar">
+  <button class="barButton" id="gameView_nextButton" style="right:10px" ></button>
+ </div>
+</div>
+
+<div id="gameView_questionTemplate" class="hidden">
+ <h2>%QUESTION%</h2>
+ <div style="text-align:center;">%ANSWERS%</div>
+</div>
+
+<div id="gameView_answerTemplate" class="hidden">
+ <button class="barButton answerButton" 
+         onclick="gameView.selectAnswer(%ANSWER_INDEX%);">%ANSWER%</button><br/>
+</div>
+
+<script>
+
+  var gameView = $ge("gameView") || {};  // properly namespace
+
+  gameView.questionNumber = -1;
+  gameView.score = 0;
+  gameView.theCurrentQuestion;
+
+  /**
+  *
+  * Initializes the view.
+  *
+  * We load our question model and the questions first. Then we set our title,
+  * localize our buttons, and attach events to them.
+  *
+  */
+  gameView.initializeView = function ()
+  {
+  PKUTIL.include ( ["./models/quizQuestions.js", "./models/quizQuestion.js"] );
+
+  gameView.viewTitle = $ge("gameView_title");
+  gameView.viewTitle.innerHTML = __T("APP_TITLE");
+
+  gameView.backButton = $ge("gameView_backButton");
+  gameView.backButton.innerHTML = __T("BACK");
+  PKUI.CORE.addTouchListener(gameView.backButton, "touchend", function () { PKUI.CORE.popView(); });
+
+  gameView.nextButton = $ge("gameView_nextButton");
+  gameView.nextButton.innerHTML = __T("SKIP");
+
+  PKUI.CORE.addTouchListener(gameView.nextButton, "touchend", gameView.nextQuestion);
+
+  gameView.scoreArea = $ge("gameView_scoreArea");
+  gameView.questionArea = $ge("gameView_questionArea");
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE.pushView when we are about to appear.
+  *
+  * Set the score to zero, the question number to one, and load
+  * the next (random) question.
+  *
+  */
+  gameView.viewWillAppear = function ()
+  {
+  gameView.questionNumber =1;
+  gameView.score = 0;
+  gameView.nextQuestion();
+  }
+
+  /**
+  *
+  * Called by PKUI.CORE when we are about to be hidden
+  *
+  */
+  gameView.viewWillHide = function ()
+  {
+  }
+
+  /**
+  *
+  * Handle Android's Back Button
+  *
+  */
+  gameView.backButtonPressed = function ()
+  {
+  PKUI.CORE.popView();
+  }
+
+  /**
+  *
+  * Loads the next (random) question into the view. We use the
+  * templates provided by gameView_questionTemplate and
+  * gameView_answerTemplate to provide the visual display of
+  * the question, and do substitution on those templates.
+  *
+  * We also display the question # as the view's title and
+  * display the current score.
+  *
+  */
+  gameView.nextQuestion = function ()
+  {
+  // load the next question into the view
+  gameView.theCurrentQuestion = QQ.getRandomQuestion();
+
+  var theQuestionTemplate = $ge("gameView_questionTemplate").innerHTML;
+  var theAnswerTemplate   = $ge("gameView_answerTemplate").innerHTML;
+
+  theQuestionTemplate = theQuestionTemplate.replace( "%QUESTION%",
+  __T(gameView.theCurrentQuestion.getQuestion()) );
+
+  var theAnswers = gameView.theCurrentQuestion.getRandomizedAnswers();
+  var theAnswersHTML = "";
+
+  for (var i=0; i<theAnswers.length; i++)
+    {
+        theAnswersHTML += theAnswerTemplate.replace( "%ANSWER%",
+                          __T(gameView.theCurrentQuestion.answerAtIndex( theAnswers[i] ) ))
+                          .replace ( "%ANSWER_INDEX%", theAnswers[i] );
+    }
+    
+    theQuestionTemplate = theQuestionTemplate.replace ( "%ANSWERS%", theAnswersHTML );
+    
+    gameView.questionArea.innerHTML = theQuestionTemplate;
+    gameView.scoreArea.innerHTML = __T("SCORE_%1", [ __N(gameView.score, "2") ]); // two decimals
+    gameView.viewTitle.innerHTML = __T("QUESTION_%1", [ __N(gameView.questionNumber, "0") ]); // no decimals here
+    
+  }
+  
+  /**
+   *
+   * Called whenever the user touches a button that answers our question.
+   *
+   * We check if it is correct or incorrect, adjust the score accordingly,
+   * and go to the next question. If we're at question 10, we end the game.
+   *
+   */
+  gameView.selectAnswer = function ( theAnswer )
+  {
+    // is the answer correct?
+    if (gameView.theCurrentQuestion.testAnswer ( theAnswer ))
+    {
+        alert (__T("CORRECT"));
+        gameView.score += 483.07; // this ensures we will have to print separators eventually.
+    }
+    else
+    {
+        alert (__T("INCORRECT"));
+        gameView.score -= 192.19;
+    }
+    
+    if (gameView.questionNumber >= 10)
+    {
+        // we're done with the game... we want the next view
+        endView.setScore ( gameView.score ); // communicate our score to the view
+        PKUI.CORE.pushView ( endView );
+    }
+    else
+    {
+        gameView.questionNumber++;
+        gameView.nextQuestion();
+    }
+
+
+  }
+  
+</script>

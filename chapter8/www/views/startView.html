@@ -1,0 +1,73 @@
+<!-- ####################################################### -->
+<!-- #                                                     # -->
+<!-- # "Start" view for Cave Runner                        # -->
+<!-- #                                                     # -->
+<!-- ####################################################### -->
+
+<div class="viewBackground">
+  <div class="content" style="padding:0; overflow: scroll;" id="startView_scroller">
+    <div id="startView_contentArea" style="padding: 0; height: auto; position: relative;"></div>
+  </div>
+</div>
+
+<div id="startView_actions" class="hidden">
+ <div id="startView_startButton" ontouchend="startView.start();" >%PLAY%</div>
+ <div id="startView_optionsButton" ontouchend="startView.options();">%OPTIONS%</div>
+</div>
+
+<script>
+  /*jshint asi:true, forin:true, noarg:true, noempty:true, eqeqeq:false, bitwise:true, undef:true, curly:true, browser:true, devel:true, smarttabs:true, maxerr:50 */
+
+  var startView = $ge("startView") || {};
+
+  /**
+   *
+   * Initializes the view.
+   *
+   */
+  startView.initializeView = function()
+  {
+
+    $ge("startView_contentArea").innerHTML =
+    
+    PKUTIL.instanceOfTemplate ( $ge("startView_actions"),
+                                { "play": __T("PLAY"),
+                                  "options": __T("OPTIONS")
+                                }
+                              );
+    if (device.platform != "WinCE")
+    {
+      startView.myScroll = new SCROLLER.GenericScroller('startView_contentArea');
+    }
+    
+
+  }
+  
+  startView.start = function ()
+  {
+      PKUI.CORE.pushView ( gameView );
+  }
+  
+  startView.options = function ()
+  {
+      PKUI.CORE.pushView ( optionsView );
+  }
+  
+  /**
+   *
+   * Called by PKUI.CORE.pushView when we are about to appear.
+   *
+   */
+  startView.viewWillAppear = function()
+  {
+  }
+  /**
+   *
+   * Called by PKUI.CORE when we are about to be hidden
+   *
+   */
+  startView.viewWillHide = function()
+  {
+  }
+
+</script>
